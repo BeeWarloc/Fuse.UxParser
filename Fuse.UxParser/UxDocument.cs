@@ -6,7 +6,7 @@ using Fuse.UxParser.Syntax;
 
 namespace Fuse.UxParser
 {
-	public class UxDocument : UxMutObject, IUxMutContainer
+	public class UxDocument : UxObject, IUxMutContainer
 	{
 		bool _isDirty;
 		UxNode.NodeList _nodeList;

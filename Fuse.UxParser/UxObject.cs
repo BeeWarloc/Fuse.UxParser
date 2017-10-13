@@ -1,4 +1,4 @@
 ﻿namespace Fuse.UxParser
 {
-	public abstract class UxMutObject { }
+	public abstract class UxObject { }
 }

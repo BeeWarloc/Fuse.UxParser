@@ -198,7 +198,7 @@ namespace Fuse.UxParser
 				dstAttr.Remove();
 
 			foreach (var srcAttr in src.Attributes.Skip(matchCount))
-				dst.Attributes.Add(new UxMutAttribute(srcAttr.Syntax));
+				dst.Attributes.Add(new UxAttribute(srcAttr.Syntax));
 		}
 
 		static bool DeepEquals(UxElement a, UxElement b)

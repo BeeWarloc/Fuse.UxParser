@@ -9,7 +9,7 @@ using Fuse.UxParser.Syntax;
 
 namespace Fuse.UxParser
 {
-	public abstract class UxNode : UxMutObject
+	public abstract class UxNode : UxObject
 	{
 		int _index = -1;
 		internal IUxMutContainer Container { get; private set; }

@@ -24,7 +24,7 @@ namespace Fuse.UxParser
 			_isEmpty = syntax.IsEmpty;
 		}
 
-		public IList<UxMutAttribute> Attributes => _attributes ?? (_attributes = new AttributeList(this));
+		public IList<UxAttribute> Attributes => _attributes ?? (_attributes = new AttributeList(this));
 		public IList<UxNode> Nodes => _nodes ?? (_nodes = new NodeList(this, _syntax.Nodes));
 		public IEnumerable<UxElement> Elements => Nodes.OfType<UxElement>();
 
@@ -83,7 +83,7 @@ namespace Fuse.UxParser
 		public override XmlNodeType NodeType => XmlNodeType.Element;
 
 		public UxNode FirstNode => Nodes.FirstOrDefault();
-		public UxMutAttribute FirstAttribute => Attributes.FirstOrDefault();
+		public UxAttribute FirstAttribute => Attributes.FirstOrDefault();
 
 		IList<UxNode> IUxMutContainer.Nodes => Nodes;
 
@@ -130,7 +130,7 @@ namespace Fuse.UxParser
 						TriviaSyntax.Empty));
 
 				Attributes.Add(
-					new UxMutAttribute(
+					new UxAttribute(
 						attributeSyntax));
 			}
 		}
@@ -184,38 +184,38 @@ namespace Fuse.UxParser
 			Nodes.Insert(0, node);
 		}
 
-		class AttributeList : WrapperList<UxMutAttribute, AttributeSyntaxBase>
+		class AttributeList : WrapperList<UxAttribute, AttributeSyntaxBase>
 		{
 			public AttributeList(UxElement container) : base(
 				container,
 				container._syntax.Attributes,
-				syntax => new UxMutAttribute(syntax)) { }
+				syntax => new UxAttribute(syntax)) { }
 
-			protected override UxMutAttribute Attach(UxMutAttribute item)
+			protected override UxAttribute Attach(UxAttribute item)
 			{
 				if (item.Parent != null)
-					item = new UxMutAttribute(item.Syntax);
+					item = new UxAttribute(item.Syntax);
 				item.Parent = (UxElement) Container;
 				return item;
 			}
 
-			protected override void SetIndexProperty(UxMutAttribute item, int index)
+			protected override void SetIndexProperty(UxAttribute item, int index)
 			{
 				item.AttributeIndex = index;
 			}
 
-			protected override int GetIndexProperty(UxMutAttribute item)
+			protected override int GetIndexProperty(UxAttribute item)
 			{
 				return item.AttributeIndex;
 			}
 
-			protected override void Detach(UxMutAttribute item)
+			protected override void Detach(UxAttribute item)
 			{
 				item.AttributeIndex = -1;
 				item.Parent = null;
 			}
 
-			protected override void OnInsert(int index, UxMutAttribute item)
+			protected override void OnInsert(int index, UxAttribute item)
 			{
 				base.OnInsert(index, item);
 				var changed = Container.Changed;
@@ -239,7 +239,7 @@ namespace Fuse.UxParser
 					changed(change);
 			}
 
-			protected override void OnReplace(int index, UxMutAttribute item)
+			protected override void OnReplace(int index, UxAttribute item)
 			{
 				var changed = Container.Changed;
 				UxAttributeRemovalChange removalChange = null;
@@ -259,39 +259,5 @@ namespace Fuse.UxParser
 				}
 			}
 		}
-	}
-
-	public class UxAttributeRemovalChange : UxChange
-	{
-		public UxAttributeRemovalChange(
-			UxNodePath nodePath,
-			int attributeIndex,
-			AttributeSyntaxBase attribute)
-		{
-			NodePath = nodePath;
-			AttributeIndex = attributeIndex;
-			Attribute = attribute;
-		}
-
-		public UxNodePath NodePath { get; }
-		public int AttributeIndex { get; }
-		public AttributeSyntaxBase Attribute { get; }
-	}
-
-	public class UxAttributeInsertionChange : UxChange
-	{
-		public UxAttributeInsertionChange(
-			UxNodePath nodePath,
-			int attributeIndex,
-			AttributeSyntaxBase attribute)
-		{
-			NodePath = nodePath;
-			AttributeIndex = attributeIndex;
-			Attribute = attribute;
-		}
-
-		public UxNodePath NodePath { get; }
-		public int AttributeIndex { get; }
-		public AttributeSyntaxBase Attribute { get; }
 	}
 }

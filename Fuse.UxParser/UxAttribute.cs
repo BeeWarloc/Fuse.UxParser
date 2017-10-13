@@ -4,12 +4,12 @@ using Fuse.UxParser.Syntax;
 
 namespace Fuse.UxParser
 {
-	public class UxMutAttribute : UxMutObject
+	public class UxAttribute : UxObject
 	{
 		int _index;
 		string _unescapedValue;
 
-		public UxMutAttribute(AttributeSyntaxBase syntax)
+		public UxAttribute(AttributeSyntaxBase syntax)
 		{
 			Syntax = syntax ?? throw new ArgumentNullException(nameof(syntax));
 		}
@@ -51,8 +51,8 @@ namespace Fuse.UxParser
 		}
 
 		public string Name => Syntax.Name.Text;
-		public UxMutAttribute NextAttribute => Parent?.Attributes.ElementAtOrDefault(AttributeIndex + 1);
-		public UxMutAttribute PreviousAttribute => AttributeIndex > 0 ? Parent?.Attributes[AttributeIndex - 1] : null;
+		public UxAttribute NextAttribute => Parent?.Attributes.ElementAtOrDefault(AttributeIndex + 1);
+		public UxAttribute PreviousAttribute => AttributeIndex > 0 ? Parent?.Attributes[AttributeIndex - 1] : null;
 
 		public override string ToString()
 		{
