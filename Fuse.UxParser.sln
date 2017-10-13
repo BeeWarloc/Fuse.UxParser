@@ -1,0 +1,54 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27004.2002
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Fuse.UxParser", "Fuse.UxParser\Fuse.UxParser.csproj", "{F36E9893-63E5-47AD-A1BD-0C95E99713F5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fuse.UxParser.Tests", "Fuse.UxParser.Tests\Fuse.UxParser.Tests.csproj", "{362F7416-A720-4C25-A358-94E96310687D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sandox", "sandox", "{4566B4D7-0A21-493C-ADA8-61530135523A}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "XmlExperimentation", "sandbox\XmlExperimentation\XmlExperimentation.csproj", "{2A872930-F7EE-44E9-901B-3869681AD768}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XmlExperimentation.Tests", "sandbox\XmlExperimentation.Tests\XmlExperimentation.Tests.csproj", "{BBD19A45-D1AF-49EB-8A15-7380BF3413B5}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{C9C17CF5-E9CA-45BF-A27E-81BC1C366BD9}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F36E9893-63E5-47AD-A1BD-0C95E99713F5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F36E9893-63E5-47AD-A1BD-0C95E99713F5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F36E9893-63E5-47AD-A1BD-0C95E99713F5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F36E9893-63E5-47AD-A1BD-0C95E99713F5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{362F7416-A720-4C25-A358-94E96310687D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{362F7416-A720-4C25-A358-94E96310687D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{362F7416-A720-4C25-A358-94E96310687D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{362F7416-A720-4C25-A358-94E96310687D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2A872930-F7EE-44E9-901B-3869681AD768}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2A872930-F7EE-44E9-901B-3869681AD768}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2A872930-F7EE-44E9-901B-3869681AD768}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2A872930-F7EE-44E9-901B-3869681AD768}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BBD19A45-D1AF-49EB-8A15-7380BF3413B5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BBD19A45-D1AF-49EB-8A15-7380BF3413B5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BBD19A45-D1AF-49EB-8A15-7380BF3413B5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BBD19A45-D1AF-49EB-8A15-7380BF3413B5}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{2A872930-F7EE-44E9-901B-3869681AD768} = {4566B4D7-0A21-493C-ADA8-61530135523A}
+		{BBD19A45-D1AF-49EB-8A15-7380BF3413B5} = {4566B4D7-0A21-493C-ADA8-61530135523A}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {396BCD79-79EA-48A4-A9A6-A3EC016497AD}
+	EndGlobalSection
+EndGlobal

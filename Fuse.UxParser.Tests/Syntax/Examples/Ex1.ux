@@ -1,0 +1,20 @@
+<App>
+  <JavaScript>
+    // JavaScript tag is interpreted as literal data, until end JavaScript tag
+    if (0 < 1) console.log('This is, or could be, reality.');
+  </JavaScript>
+  <StackPanel>
+    <Text Value="double quoted attribute (can haz ')" />
+    <Text Value='single quoted attribute (can haz ")' />
+    <Text Value="unquoted >< inside an attribute" />
+		<Text Value="standard entities: &quot;&gt;&lt;&amp;&apos;" />
+    <!-- UX supports attributes without surrounding quotes -->
+    <Text Value= unquoted_attribute />
+    <Text>text node inside element</Text>
+    <Text><![CDATA[CDATA node <><><><>]]></Text>
+
+    <!-- Does NOT need to be supported: -->
+    <!--   Unquoted ux expression with spaces: <Text Value={some ux expr} /> -->
+    <!--   Entities in ux expressions: <Text Value=single&quot; /> -->
+  </StackPanel>
+</App>
