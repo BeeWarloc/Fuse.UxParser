@@ -29,7 +29,7 @@ namespace Fuse.UxParser.Tests
 
 		public static IEnumerable<TestCaseData> FuseSamples()
 		{
-			return GetTestCaseDataForAllUxDocsRecursively(@"c:\src\fuse-samples");
+			return GetTestCaseDataForAllUxDocsRecursively(Path.Combine(SolutionDirectory, "..", "fuse-samples"));
 		}
 
 		static IEnumerable<TestCaseData> GetTestCaseDataForAllUxDocsRecursively(string directory)
