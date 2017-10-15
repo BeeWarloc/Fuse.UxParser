@@ -7,7 +7,7 @@ namespace Fuse.UxParser
 	public class UxText : UxNode
 	{
 		TextSyntax _syntax;
-		string _unescapedText;
+		string _cachedUnescapedText;
 
 		public UxText(TextSyntax syntax)
 		{
@@ -16,7 +16,7 @@ namespace Fuse.UxParser
 
 		public string Value
 		{
-			get => _unescapedText ?? (_unescapedText = UxTextEncoding.Unescape(_syntax.Value.Text));
+			get => _cachedUnescapedText ?? (_cachedUnescapedText = UxTextEncoding.Unescape(_syntax.Value.Text));
 			set
 			{
 				if (value == null)
@@ -29,9 +29,8 @@ namespace Fuse.UxParser
 
 				if (Value != value)
 				{
-					_syntax = new TextSyntax(new EncodedTextToken(UxTextEncoding.EncodeText(value)));
-					_unescapedText = value;
-					SetDirty();
+					ReplaceSyntax(new TextSyntax(new EncodedTextToken(UxTextEncoding.EncodeText(value))));
+					_cachedUnescapedText = value;
 				}
 			}
 		}
@@ -42,6 +41,17 @@ namespace Fuse.UxParser
 		internal override UxNode DetachedNodeClone()
 		{
 			return new UxText(_syntax);
+		}
+
+		public override void ReplaceSyntax(NodeSyntax newSyntax)
+		{
+			if (newSyntax == null) throw new ArgumentNullException(nameof(newSyntax));
+			if (!(_syntax is TextSyntax newTextSyntax))
+				throw new ArgumentException("UxText can only have its syntax replaced by TextSyntax object");
+
+			_cachedUnescapedText = null;
+			_syntax = newTextSyntax;
+			SetDirty();
 		}
 	}
 }

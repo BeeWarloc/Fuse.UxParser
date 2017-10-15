@@ -6,7 +6,7 @@ using Fuse.UxParser.Syntax;
 
 namespace Fuse.UxParser
 {
-	public class UxDocument : UxObject, IUxMutContainer
+	public class UxDocument : UxObject, IUxContainerInternals
 	{
 		bool _isDirty;
 		UxNode.NodeList _nodeList;
@@ -33,15 +33,15 @@ namespace Fuse.UxParser
 		public UxElement Root => Nodes.OfType<UxElement>().FirstOrDefault();
 
 
-		void IUxMutContainer.SetDirty()
+		void IUxContainerInternals.SetDirty()
 		{
 			_isDirty = true;
 		}
 
 		public IList<UxNode> Nodes => _nodeList ?? (_nodeList = new UxNode.NodeList(this, Syntax.Nodes));
 
-		Action<UxChange> IUxMutContainer.Changed => Changed;
-		int IUxMutContainer.NodesSourceOffset => 0;
+		Action<UxChange> IUxContainerInternals.Changed => Changed;
+		int IUxContainerInternals.NodesSourceOffset => 0;
 
 		public event Action<UxChange> Changed;
 
@@ -55,6 +55,11 @@ namespace Fuse.UxParser
 		public IEnumerable<UxNode> DescendantNodes()
 		{
 			return Nodes.SelectMany(x => x.DescendantNodesAndSelf());
+		}
+
+		public override string ToString()
+		{
+			return Syntax.ToString();
 		}
 	}
 }

@@ -26,6 +26,7 @@ namespace Fuse.UxParser.Syntax
 		[NodeChild(2)]
 		public ElementEndTagSyntax EndTag { get; }
 
+
 		public override NameToken Name => StartTag.Name;
 		public override IImmutableList<AttributeSyntaxBase> Attributes => StartTag.Attributes;
 		public override int DescendantElementCount { get; }

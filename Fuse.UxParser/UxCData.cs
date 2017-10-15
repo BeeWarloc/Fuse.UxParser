@@ -28,8 +28,7 @@ namespace Fuse.UxParser
 
 				if (Value != value)
 				{
-					_syntax = new CDataSyntax(_syntax.Start, new EncodedTextToken(value), _syntax.End);
-					SetDirty();
+					ReplaceSyntax(new CDataSyntax(_syntax.Start, new EncodedTextToken(value), _syntax.End));
 				}
 			}
 		}
@@ -40,6 +39,16 @@ namespace Fuse.UxParser
 		internal override UxNode DetachedNodeClone()
 		{
 			return new UxCData(_syntax);
+		}
+
+		public override void ReplaceSyntax(NodeSyntax newSyntax)
+		{
+			if (newSyntax == null) throw new ArgumentNullException(nameof(newSyntax));
+			if (!(_syntax is CDataSyntax newCDataSyntax))
+				throw new ArgumentException("UxText can only have its syntax replaced by TextSyntax object");
+
+			_syntax = newCDataSyntax;
+			SetDirty();
 		}
 	}
 }

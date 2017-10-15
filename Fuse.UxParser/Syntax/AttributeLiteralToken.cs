@@ -2,6 +2,7 @@
 
 namespace Fuse.UxParser.Syntax
 {
+	// TODO: Read 3.3.3 Attribute-Value Normalization in XML spec and see what it tells us
 	public class AttributeLiteralToken : SyntaxToken
 	{
 		readonly string _escapedValue;

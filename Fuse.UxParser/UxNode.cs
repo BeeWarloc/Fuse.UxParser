@@ -12,7 +12,7 @@ namespace Fuse.UxParser
 	public abstract class UxNode : UxObject
 	{
 		int _index = -1;
-		internal IUxMutContainer Container { get; private set; }
+		internal IUxContainerInternals Container { get; private set; }
 
 		// Needs to be updated by list wrapper on insertions and removals
 		public int NodeIndex
@@ -126,7 +126,7 @@ namespace Fuse.UxParser
 		[SuppressMessage("ReSharper", "ConditionIsAlwaysTrueOrFalse")]
 		internal class NodeList : WrapperList<UxNode, NodeSyntax>
 		{
-			public NodeList(IUxMutContainer container, IImmutableList<NodeSyntax> initialSyntaxList) : base(
+			public NodeList(IUxContainerInternals container, IImmutableList<NodeSyntax> initialSyntaxList) : base(
 				container,
 				initialSyntaxList,
 				FromSyntax) { }
@@ -161,17 +161,17 @@ namespace Fuse.UxParser
 
 				var changed = Container.Changed;
 				if (changed != null)
-					changed(new UxNodeInsertionChange(item.NodePath, item.Syntax));
+					changed(new UxInsertNodeChange(item.NodePath, item.Syntax));
 			}
 
 			protected override void OnRemove(int index)
 			{
 				var changed = Container.Changed;
-				UxNodeRemovalChange change = null;
+				UxRemoveNodeChange change = null;
 				if (changed != null)
 				{
 					var removed = this[index];
-					change = new UxNodeRemovalChange(removed.NodePath, removed.Syntax);
+					change = new UxRemoveNodeChange(removed.NodePath, removed.Syntax);
 				}
 
 				base.OnRemove(index);
@@ -192,8 +192,8 @@ namespace Fuse.UxParser
 				if (oldSyntax != null)
 				{
 					var path = item.NodePath;
-					changed(new UxNodeRemovalChange(path, oldSyntax));
-					changed(new UxNodeInsertionChange(path, item.Syntax));
+					changed(new UxRemoveNodeChange(path, oldSyntax));
+					changed(new UxInsertNodeChange(path, item.Syntax));
 				}
 			}
 		}
@@ -203,7 +203,7 @@ namespace Fuse.UxParser
 			readonly IList<TItem> _inner;
 
 			protected WrapperList(
-				IUxMutContainer container,
+				IUxContainerInternals container,
 				IEnumerable<TSyntax> initialSyntaxList,
 				Func<TSyntax, TItem> itemCtor)
 			{
@@ -211,7 +211,7 @@ namespace Fuse.UxParser
 				_inner = initialSyntaxList.Select((syntax, i) => Attach(itemCtor(syntax), i)).ToList();
 			}
 
-			protected IUxMutContainer Container { get; }
+			protected IUxContainerInternals Container { get; }
 
 
 			public IEnumerator<TItem> GetEnumerator()
@@ -353,5 +353,7 @@ namespace Fuse.UxParser
 				Container.SetDirty();
 			}
 		}
+
+		public abstract void ReplaceSyntax(NodeSyntax newSyntax);
 	}
 }

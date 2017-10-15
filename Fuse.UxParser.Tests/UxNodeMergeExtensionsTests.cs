@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Xml.Linq;
 using Fuse.UxParser.Syntax;
+using Newtonsoft.Json;
 using NUnit.Framework;
 
 namespace Fuse.UxParser.Tests
@@ -9,9 +10,9 @@ namespace Fuse.UxParser.Tests
 	[TestFixture]
 	public class UxNodeMergeExtensionsTests
 	{
-		static UxNode ParseXml(string xml)
+		static UxDocument ParseXml(string xml)
 		{
-			return UxNode.FromSyntax(SyntaxParser.ParseNode(xml));
+			return UxDocument.Parse(xml);
 		}
 
 		static string EventToString(UxChange change)
@@ -19,7 +20,22 @@ namespace Fuse.UxParser.Tests
 			throw new NotImplementedException();
 		}
 
+		class SyntaxConverter : JsonConverter
+		{
+			public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+			{
+				writer.WriteValue(value.ToString());
+			}
+
+			public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer) => throw new NotSupportedException();
+			public override bool CanRead => false;
+			public override bool CanConvert(Type objectType) =>
+				typeof(SyntaxBase).IsAssignableFrom(objectType) ||
+				objectType == typeof(UxNodePath);
+		}
+
 		// TODO: This test is in progress of being ported from using XElement to UxElement
+		[TestCase("<TheRoot />", "<!-- comment before root --><TheRoot />")]
 		[TestCase("<A/>", "<A/>")]
 		[TestCase("<A/>", "<A></A>", "Value Element")]
 		[TestCase("<A></A>", "<A/>", "Value Element")]
@@ -34,6 +50,7 @@ namespace Fuse.UxParser.Tests
 			"<Root><A><B Foo=\"Bar\" /><B Foo=\"MidInsert\" /><B Foo=\"deadbeef\" /></A></Root>",
 			"Add Element")]
 		[TestCase("<A Foo=\"Bar\" />", "<A Foo=\"Bar\" Chicken=\"Cow\" />", "Add Attribute")]
+		[TestCase("<A Foo=\"Bar\" />", "<A     Foo=\"Bar\"    Chicken=\"Cow\"     />", "Add Attribute")]
 		[TestCase("<A Foo=\"Bar\" />", "<A Foo=\"Moo\" Chicken=\"Cow\" />", "Value Attribute, Add Attribute")]
 		[TestCase("<A Foo=\"Bar\" />", "<A Foo=\"Moo Moo\" />", "Value Attribute")]
 		[TestCase("<A></A>", "<A xmlns:foo=\"urn:foo\"><foo:Bar /></A>", "Add Attribute, Add Element")]
@@ -44,8 +61,25 @@ namespace Fuse.UxParser.Tests
 
 			var source = ParseXml(after);
 			var destination = ParseXml(before);
+			var patchDestination = ParseXml(before);
 
 			var sourceBefore = source.ToString();
+
+			destination.Changed += change =>
+			{
+				Console.WriteLine(
+					"Got change: {0}",
+					JsonConvert.SerializeObject(
+						change,
+						Formatting.Indented,
+						new JsonSerializerSettings
+						{
+							TypeNameHandling = TypeNameHandling.Objects,
+							Converters = { new SyntaxConverter() }
+						}));
+				Assert.That(change.TryApply(patchDestination), Is.True, "Could not apply change to patch destination");
+				Assert.That(patchDestination.Syntax, Is.EqualTo(destination.Syntax));
+			};
 
 			var expectedEvents = expectedEventsString
 				.Split(',')
@@ -71,7 +105,7 @@ namespace Fuse.UxParser.Tests
 			destination.Merge(source);
 			Console.WriteLine("Destination:\r\n{0}\r\nSource:\r\n{1}", destination, source);
 			Assert.That(source.ToString(), Is.EqualTo(sourceBefore));
-			Assert.That(source.ToString(), Is.EqualTo(destination.ToString()));
+			Assert.That(destination.ToString(), Is.EqualTo(source.ToString()));
 			Assert.That(source.DeepEquals(destination), Is.True);
 			//Assert.That(actualEventCount, Is.EqualTo(expectedEvents.Count),
 			//	"Fewer events than expected emitted by Changed event:\r\n" +

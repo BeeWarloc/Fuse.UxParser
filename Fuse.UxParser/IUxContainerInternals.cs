@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace Fuse.UxParser
 {
-	internal interface IUxMutContainer
+	internal interface IUxContainerInternals : IUxContainer
 	{
-		IList<UxNode> Nodes { get; }
 		Action<UxChange> Changed { get; }
 		int NodesSourceOffset { get; }
 		void SetDirty();

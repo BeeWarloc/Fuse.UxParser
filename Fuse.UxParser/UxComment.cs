@@ -28,8 +28,7 @@ namespace Fuse.UxParser
 
 				if (Value != value)
 				{
-					_syntax = _syntax.With(value);
-					SetDirty();
+					ReplaceSyntax(_syntax.With(value));
 				}
 			}
 		}
@@ -40,6 +39,16 @@ namespace Fuse.UxParser
 		internal override UxNode DetachedNodeClone()
 		{
 			return new UxComment(_syntax);
+		}
+
+		public override void ReplaceSyntax(NodeSyntax newSyntax)
+		{
+			if (newSyntax == null) throw new ArgumentNullException(nameof(newSyntax));
+			if (!(_syntax is CommentSyntax newCommentSyntax))
+				throw new ArgumentException("UxText can only have its syntax replaced by TextSyntax object");
+
+			_syntax = newCommentSyntax;
+			SetDirty();
 		}
 	}
 }

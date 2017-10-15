@@ -4,10 +4,13 @@ using Fuse.UxParser.Syntax;
 
 namespace Fuse.UxParser
 {
+	/// <summary>
+	/// Represents an attribute with an (immutable) name.
+	/// </summary>
 	public class UxAttribute : UxObject
 	{
 		int _index;
-		string _unescapedValue;
+		string _cachedUnescapedValue;
 
 		public UxAttribute(AttributeSyntaxBase syntax)
 		{
@@ -35,7 +38,7 @@ namespace Fuse.UxParser
 
 		public string Value
 		{
-			get => _unescapedValue ?? (_unescapedValue = Syntax.Value);
+			get => _cachedUnescapedValue ?? (_cachedUnescapedValue = Syntax.Value);
 			set
 			{
 				if (value == null)
@@ -43,9 +46,8 @@ namespace Fuse.UxParser
 
 				if (value != Value)
 				{
-					Syntax = Syntax.With(newValue: value);
-					_unescapedValue = value;
-					Parent.SetDirty();
+					ReplaceSyntax(Syntax.With(newValue: value));
+					_cachedUnescapedValue = value;
 				}
 			}
 		}
@@ -59,16 +61,32 @@ namespace Fuse.UxParser
 			return Syntax.ToString();
 		}
 
-		public void Remove()
+		internal void ReplaceSyntax(AttributeSyntaxBase updatedSyntax)
 		{
-			EnsureAttached();
-			Parent.Attributes.RemoveAt(AttributeIndex);
+			if (updatedSyntax == null) throw new ArgumentNullException(nameof(updatedSyntax));
+
+			// Name is seen as an invariant of UxAttribute.
+			if (Syntax.Name.Text != updatedSyntax.Name.Text)
+				throw new InvalidOperationException("Only accepts updates from syntax with same name");
+
+			var oldSyntax = Syntax;
+			_cachedUnescapedValue = null;
+			Syntax = updatedSyntax;
+			Parent.SetDirty();
+			var changed = Parent?.Container?.Changed;
+			if (changed != null)
+			{
+				changed(new UxReplaceAttributeChange(Parent.NodePath, AttributeIndex, oldSyntax, Syntax));
+			}
 		}
 
-		void EnsureAttached()
+		public bool Remove()
 		{
 			if (Parent == null)
-				throw new InvalidOperationException("TODO PROPER ERROR");
+				return false;
+
+			Parent.Attributes.RemoveAt(AttributeIndex);
+			return true;
 		}
 	}
 }

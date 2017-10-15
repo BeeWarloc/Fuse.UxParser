@@ -12,10 +12,10 @@ namespace Fuse.UxParser.Tests
 			return doc;
 		}
 
-		[TestCase("<X/>", "/")]
-		[TestCase("<A><X/></A>", "/0")]
-		[TestCase("<A><B/><X/></A>", "/1")]
-		[TestCase("<A><!--   --><B/><X/></A>", "/2")]
+		[TestCase("<X/>", "/0")]
+		[TestCase("<A><X/></A>", "/0/0")]
+		[TestCase("<A><B/><X/></A>", "/0/1")]
+		[TestCase("<A><!--   --><B/><X/></A>", "/0/2")]
 		[Test]
 		public void From_element(string xml, string expected)
 		{

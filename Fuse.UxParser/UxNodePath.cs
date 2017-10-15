@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 
 namespace Fuse.UxParser
@@ -15,11 +17,13 @@ namespace Fuse.UxParser
 			_indexes = indexes;
 		}
 
+		internal IEnumerable<int> Indexes => _indexes;
+
 		public static UxNodePath From(UxNode node)
 		{
 			var depth = node.Depth;
-			var indexes = new int[depth];
-			for (var i = depth - 1; i >= 0; i--)
+			var indexes = new int[depth + 1];
+			for (var i = depth; i >= 0; i--)
 			{
 				indexes[i] = node.NodeIndex;
 				node = node.Parent;
@@ -27,11 +31,14 @@ namespace Fuse.UxParser
 			return new UxNodePath(indexes);
 		}
 
-		public bool TryFind<TNode>(UxDocument doc, out TNode node)
+		public bool TryFind<TNode>(UxDocument document, out TNode node)
 			where TNode : UxNode
 		{
-			UxElement parent;
-			if (TryFindPathParent(doc.Root, out parent))
+			// Hmm.. that / means root makes it hard to target other nodes
+			// We could consider / meaning the document instead, and the root
+			// being defined by /0 (if there's no comment nodes or trivia above or below)
+			IUxContainer parent;
+			if (TryFindPathParent(document, out parent))
 			{
 				var leafPos = _indexes.Last();
 				node = parent.Nodes.ElementAtOrDefault(leafPos) as TNode;
@@ -41,7 +48,12 @@ namespace Fuse.UxParser
 			return false;
 		}
 
-		bool TryFindPathParent(UxElement descendant, out UxElement parent, int pathPos = 0)
+		public bool TryFindPathParent(UxDocument doc, out IUxContainer parent)
+		{
+			return TryFindPathParent(doc, out parent, 0);
+		}
+
+		bool TryFindPathParent(IUxContainer descendant, out IUxContainer parent, int pathPos)
 		{
 			if (pathPos >= _indexes.Length)
 				throw new InvalidOperationException("Unable to locate parent");
@@ -52,7 +64,7 @@ namespace Fuse.UxParser
 				return true;
 			}
 
-			var el = descendant.Nodes.ElementAtOrDefault(_indexes[pathPos]) as UxElement;
+			var el = descendant.Nodes.ElementAtOrDefault(_indexes[pathPos]) as IUxContainer;
 			if (el == null)
 			{
 				parent = null;

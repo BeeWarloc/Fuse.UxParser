@@ -7,7 +7,7 @@ using Fuse.UxParser.Syntax;
 
 namespace Fuse.UxParser
 {
-	public class UxElement : UxNode, IUxMutContainer
+	public class UxElement : UxNode, IUxContainerInternals
 	{
 		AttributeList _attributes;
 		bool _isDirty;
@@ -85,16 +85,14 @@ namespace Fuse.UxParser
 		public UxNode FirstNode => Nodes.FirstOrDefault();
 		public UxAttribute FirstAttribute => Attributes.FirstOrDefault();
 
-		IList<UxNode> IUxMutContainer.Nodes => Nodes;
+		Action<UxChange> IUxContainerInternals.Changed => Container?.Changed;
 
-		Action<UxChange> IUxMutContainer.Changed => Container?.Changed;
-
-		int IUxMutContainer.NodesSourceOffset =>
+		int IUxContainerInternals.NodesSourceOffset =>
 			SourceOffset + (Syntax as ElementSyntax)?.StartTag.FullSpan ??
 			throw new InvalidOperationException(
 				"Bad code path. Noone should ask for the NodesSourceOffset while underlying syntax is not an ElementSyntax");
 
-		void IUxMutContainer.SetDirty()
+		void IUxContainerInternals.SetDirty()
 		{
 			SetDirty();
 		}
@@ -165,6 +163,13 @@ namespace Fuse.UxParser
 					yield return el;
 		}
 
+		public override void ReplaceSyntax(NodeSyntax newSyntax)
+		{
+			// Could maybe support this by clearing both attributes and node lists and starting over
+			// Or maybe it would be easier to just do merging directly here?
+			throw new NotSupportedException();
+		}
+
 		internal override void SetDirty()
 		{
 			if (_isDirty)
@@ -220,17 +225,17 @@ namespace Fuse.UxParser
 				base.OnInsert(index, item);
 				var changed = Container.Changed;
 				if (changed != null)
-					changed(new UxAttributeInsertionChange(item.Parent.NodePath, item.AttributeIndex, item.Syntax));
+					changed(new UxInsertAttributeChange(item.Parent.NodePath, item.AttributeIndex, item.Syntax));
 			}
 
 			protected override void OnRemove(int index)
 			{
-				UxAttributeRemovalChange change = null;
+				UxRemoveAttributeChange change = null;
 				var changed = Container.Changed;
 				if (changed != null)
 				{
 					var item = this[index];
-					change = new UxAttributeRemovalChange(item.Parent.NodePath, item.AttributeIndex, item.Syntax);
+					change = new UxRemoveAttributeChange(item.Parent.NodePath, item.AttributeIndex, item.Syntax);
 				}
 
 				base.OnRemove(index);
@@ -242,20 +247,20 @@ namespace Fuse.UxParser
 			protected override void OnReplace(int index, UxAttribute item)
 			{
 				var changed = Container.Changed;
-				UxAttributeRemovalChange removalChange = null;
+				UxRemoveAttributeChange change = null;
 				if (changed != null)
 				{
 					var oldItem = this[index];
-					removalChange = new UxAttributeRemovalChange(oldItem.Parent.NodePath, oldItem.AttributeIndex, oldItem.Syntax);
+					change = new UxRemoveAttributeChange(oldItem.Parent.NodePath, oldItem.AttributeIndex, oldItem.Syntax);
 				}
 
 				base.OnReplace(index, item);
 
-				if (removalChange != null)
+				if (change != null)
 				{
 					var insertedItemSyntax = item.Syntax;
-					changed(removalChange);
-					changed(new UxAttributeInsertionChange(removalChange.NodePath, removalChange.AttributeIndex, insertedItemSyntax));
+					changed(change);
+					changed(new UxInsertAttributeChange(change.NodePath, change.AttributeIndex, insertedItemSyntax));
 				}
 			}
 		}

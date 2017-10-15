@@ -6,8 +6,19 @@ namespace Fuse.UxParser
 {
 	public static class UxNodeMergeExtensions
 	{
+		public static void Merge(this UxDocument dst, UxDocument src)
+		{
+			if (dst == null) throw new ArgumentNullException(nameof(dst));
+			if (src == null) throw new ArgumentNullException(nameof(src));
+
+			MergeChildNodes(dst, src);
+		}
+
 		public static void Merge(this UxNode dst, UxNode src)
 		{
+			if (dst == null) throw new ArgumentNullException(nameof(dst));
+			if (src == null) throw new ArgumentNullException(nameof(src));
+
 			if (dst.NodeType != src.NodeType)
 				throw new InvalidOperationException("Node type of merge source must be same as destination.");
 			switch (src.NodeType)
@@ -16,13 +27,9 @@ namespace Fuse.UxParser
 					MergeElement((UxElement) dst, (UxElement) src);
 					break;
 				case XmlNodeType.Comment:
-					MergeComment((UxComment) dst, (UxComment) src);
-					break;
 				case XmlNodeType.Text:
-					MergeText((UxText) dst, (UxText) src);
-					break;
 				case XmlNodeType.CDATA:
-					MergeCData((UxCData) dst, (UxCData) src);
+					dst.ReplaceSyntax(src.Syntax);
 					break;
 				//case XmlNodeType.Document:
 				//	Merge(((XDocument)dst).Root, ((XDocument)src).Root);
@@ -34,6 +41,7 @@ namespace Fuse.UxParser
 
 		static void MergeElement(UxElement dst, UxElement src)
 		{
+			// TODO: This does not retain NameToken trivia, maybe directly modify token instead?
 			if (dst.Name != src.Name)
 				dst.Name = src.Name;
 
@@ -44,7 +52,7 @@ namespace Fuse.UxParser
 				dst.IsEmpty = src.IsEmpty;
 		}
 
-		static void MergeChildNodes(UxElement dst, UxElement src)
+		static void MergeChildNodes(IUxContainerInternals dst, IUxContainerInternals src)
 		{
 			var dstNodes = WorkList.Create(dst);
 			var srcNodes = WorkList.Create(src);
@@ -89,34 +97,12 @@ namespace Fuse.UxParser
 				node.Remove();
 			}
 
-			UxNode dstInsertPoint = null;
 			while (!srcNodes.IsEmpty)
 			{
 				// We need to know where to insert this.
 				var srcNode = srcNodes.Pop(Position.Head);
 				var dstNode = CloneNode(srcNode);
-				if (dstInsertPoint == null)
-				{
-					var srcIndex = srcNode.NodeIndex;
-					if (srcIndex == 0)
-					{
-						dst.AddFirst(dstNode);
-					}
-					else
-					{
-						dstInsertPoint = dst.FirstNode;
-						// Insert point will be element before srcNode index
-						for (var dstIndex = 0; dstIndex < srcIndex - 1; dstIndex++)
-							dstInsertPoint = dstInsertPoint.NextNode;
-						dstInsertPoint.AddAfterSelf(dstNode);
-					}
-				}
-				else
-				{
-					dstInsertPoint.AddAfterSelf(dstNode);
-				}
-
-				dstInsertPoint = dstNode;
+				dst.Nodes.Insert(srcNode.NodeIndex, dstNode);
 			}
 		}
 
@@ -156,29 +142,13 @@ namespace Fuse.UxParser
 			}
 		}
 
-		static void MergeCData(UxCData dst, UxCData src)
-		{
-			if (dst.Value != src.Value)
-				dst.Value = src.Value;
-		}
-
-		static void MergeText(UxText dst, UxText src)
-		{
-			if (dst.Value != src.Value)
-				dst.Value = src.Value;
-		}
-
-		static void MergeComment(UxComment dst, UxComment src)
-		{
-			if (dst.Value != src.Value)
-				dst.Value = src.Value;
-		}
-
 		static void MergeAttributes(UxElement dst, UxElement src)
 		{
-			// Attributes
-			// This will reorder the attributes when merging, right?
+			// Since we have better control over ordering of UxAttribute(s) than XAttribute
+			// we could change this.
 
+			// However it's not really that bad to say an attribute is removed and added instead
+			// of changed after being reordered, since it's not that common.
 			var matchCount = 0;
 			foreach (var pair in dst.Attributes.Zip(src.Attributes, (dstAttr, srcAttr) => new { dstAttr, srcAttr }))
 			{
@@ -186,9 +156,10 @@ namespace Fuse.UxParser
 				var srcAttr = pair.srcAttr;
 
 				if (dstAttr.Name != srcAttr.Name)
-					continue;
-				if (dstAttr.Value != srcAttr.Value)
-					dstAttr.Value = srcAttr.Value;
+					break;
+
+				if (!dstAttr.Syntax.Equals(srcAttr.Syntax))
+					dstAttr.ReplaceSyntax(srcAttr.Syntax);
 
 				matchCount++;
 			}
@@ -201,68 +172,14 @@ namespace Fuse.UxParser
 				dst.Attributes.Add(new UxAttribute(srcAttr.Syntax));
 		}
 
-		static bool DeepEquals(UxElement a, UxElement b)
+		public static bool DeepEquals(this UxDocument a, UxDocument b)
 		{
-			if (a == null) throw new ArgumentNullException("a");
-			if (b == null) throw new ArgumentNullException("b");
-
-			if (a.Name != b.Name)
-				return false;
-
-			if (a.IsEmpty != b.IsEmpty)
-				return false;
-
-			var aAttr = a.FirstAttribute;
-			var bAttr = b.FirstAttribute;
-			while (aAttr != null && bAttr != null)
-			{
-				if (aAttr.Name != bAttr.Name || aAttr.Value != bAttr.Value)
-					return false;
-
-				aAttr = aAttr.NextAttribute;
-				bAttr = bAttr.NextAttribute;
-			}
-
-			var aChild = a.FirstNode;
-			var bChild = b.FirstNode;
-			while (aChild != null && bChild != null)
-			{
-				if (!DeepEquals(aChild, bChild))
-					return false;
-
-				aChild = aChild.NextNode;
-				bChild = bChild.NextNode;
-			}
-
-			// If both are null the element child count also match
-			return aChild == null && bChild == null;
+			return a.Syntax.Equals(b.Syntax);
 		}
 
 		public static bool DeepEquals(this UxNode a, UxNode b)
 		{
-			// Could be this is redundant, just doing Equals on the Syntax should do fine (for full fidelity equals at least)
-
-			if (a == null) throw new ArgumentNullException("a");
-			if (b == null) throw new ArgumentNullException("b");
-
-			if (a.NodeType != b.NodeType)
-				return false;
-
-			switch (a.NodeType)
-			{
-				case XmlNodeType.Element:
-					return DeepEquals((UxElement) a, (UxElement) b);
-				case XmlNodeType.CDATA:
-					return ((UxCData) a).Value == ((UxCData) b).Value;
-				case XmlNodeType.Text:
-					return ((UxText) a).Value == ((UxText) b).Value;
-				case XmlNodeType.Comment:
-					return ((UxComment) a).Value == ((UxComment) b).Value;
-				//case XmlNodeType.Document:
-				//	return DeepEquals(((XDocument)a).Root, ((XDocument)b).Root);
-				default:
-					throw new InvalidOperationException("TODO: Find out if this covers all relevant cases");
-			}
+			return a.Syntax.Equals(b.Syntax);
 		}
 
 		enum Position
@@ -273,7 +190,7 @@ namespace Fuse.UxParser
 
 		static class WorkList
 		{
-			public static WorkList<UxNode> Create(IUxMutContainer container)
+			public static WorkList<UxNode> Create(IUxContainerInternals container)
 			{
 				return new WorkList<UxNode>(
 					container.Nodes.FirstOrDefault(),
