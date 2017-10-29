@@ -6,16 +6,14 @@ namespace Fuse.UxParser
 {
 	public class UxComment : UxNode
 	{
-		CommentSyntax _syntax;
-
 		public UxComment(CommentSyntax syntax)
 		{
-			_syntax = syntax ?? throw new ArgumentNullException(nameof(syntax));
+			Syntax = syntax ?? throw new ArgumentNullException(nameof(syntax));
 		}
 
 		public string Value
 		{
-			get => _syntax.Value.Text;
+			get => Syntax.Value.Text;
 			set
 			{
 				if (value == null)
@@ -27,28 +25,31 @@ namespace Fuse.UxParser
 					throw new ArgumentException("Value must not contain comment end indicator");
 
 				if (Value != value)
-				{
-					ReplaceSyntax(_syntax.With(value));
-				}
+					ReplaceSyntax(Syntax.With(value));
 			}
 		}
 
-		public override NodeSyntax Syntax => _syntax;
+		protected override NodeSyntax NodeSyntax => Syntax;
+		public new CommentSyntax Syntax { get; set; }
+
 		public override XmlNodeType NodeType => XmlNodeType.Comment;
 
 		internal override UxNode DetachedNodeClone()
 		{
-			return new UxComment(_syntax);
+			return new UxComment(Syntax);
 		}
 
 		public override void ReplaceSyntax(NodeSyntax newSyntax)
 		{
 			if (newSyntax == null) throw new ArgumentNullException(nameof(newSyntax));
-			if (!(_syntax is CommentSyntax newCommentSyntax))
-				throw new ArgumentException("UxText can only have its syntax replaced by TextSyntax object");
+			if (!(newSyntax is CommentSyntax newCommentSyntax))
+				throw new ArgumentException("UxText can only have its syntax replaced by CommentSyntax object");
 
-			_syntax = newCommentSyntax;
+			var oldSyntax = Syntax;
+			Syntax = newCommentSyntax;
 			SetDirty();
+
+			Container?.Changed?.Invoke(new UxReplaceNodeChange(NodePath, oldSyntax, newCommentSyntax));
 		}
 	}
 }

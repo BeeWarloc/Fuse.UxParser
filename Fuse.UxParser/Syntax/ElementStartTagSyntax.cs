@@ -6,7 +6,7 @@ namespace Fuse.UxParser.Syntax
 {
 	public class ElementStartTagSyntax : SyntaxBase
 	{
-		public ElementStartTagSyntax(
+		ElementStartTagSyntax(
 			LessThanToken lessThan,
 			NameToken name,
 			IImmutableList<AttributeSyntaxBase> attributes,
@@ -16,6 +16,15 @@ namespace Fuse.UxParser.Syntax
 			Name = name;
 			Attributes = attributes;
 			GreaterThan = greaterThan;
+		}
+
+		public static ElementStartTagSyntax Create(
+			LessThanToken lessThan,
+			NameToken name,
+			IImmutableList<AttributeSyntaxBase> attributes,
+			GreaterThanToken greaterThan)
+		{
+			return new ElementStartTagSyntax(lessThan, name, attributes, greaterThan);
 		}
 
 		[NodeChild(0)]
@@ -51,7 +60,7 @@ namespace Fuse.UxParser.Syntax
 			attributes = attributes ?? Attributes;
 			if (attributes.Equals(Attributes) && name.Equals(Name))
 				return this;
-			return new ElementStartTagSyntax(LessThan, name, attributes, GreaterThan);
+			return Create(LessThan, name, attributes, GreaterThan);
 		}
 	}
 }

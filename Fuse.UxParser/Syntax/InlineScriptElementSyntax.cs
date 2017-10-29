@@ -4,6 +4,7 @@ using System.IO;
 
 namespace Fuse.UxParser.Syntax
 {
+	// Not very happy how this turned out... Should def change this
 	public class InlineScriptElementSyntax : ElementSyntaxBase
 	{
 		public InlineScriptElementSyntax(ElementStartTagSyntax startTag, ScriptToken script, ElementEndTagSyntax endTag)
@@ -35,7 +36,7 @@ namespace Fuse.UxParser.Syntax
 		public override TriviaSyntax TrailingTrivia => EndTag.TrailingTrivia;
 
 		public override ElementSyntaxBase With(
-			string name = null,
+			NameToken name = null,
 			IImmutableList<AttributeSyntaxBase> attributes = null,
 			IImmutableList<NodeSyntax> nodes = null,
 			bool? isEmpty = null)

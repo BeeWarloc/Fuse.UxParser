@@ -19,7 +19,7 @@ namespace Fuse.UxParser
 
 		public UxNodePath NodePath { get; }
 
-		protected override UxChange Invert()
+		public override UxChange Invert()
 		{
 			return new UxInsertNodeChange(NodePath, Node);
 		}

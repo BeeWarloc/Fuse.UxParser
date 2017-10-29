@@ -23,42 +23,12 @@ namespace Fuse.UxParser.Tests
 			Assert.That(node.NodePath.ToString(), Is.EqualTo(expected));
 		}
 
-		[TestCase("<A/>", "/0", "<X/>", "<A><X/></A>")]
-		[TestCase("<A><B/></A>", "/0/0", "<X/>", "<A><B><X/></B></A>")]
-		[TestCase("<A>  <B/></A>", "/1/0", "<X/>", "<A>  <B><X/></B></A>")]
-		//          / (0) (1) 2/(0) ↓1
-		[TestCase("<A><B/>   <B><D/><E/></B></A>", "/2/1", "<X/>", "<A><B/>   <B><D/><X/><E/></B></A>")]
-		[TestCase("<A/>", "/0", "some text", "<A>some text</A>")]
+		[TestCase("/0")]
+		[TestCase("/1/7/4")]
 		[Test]
-		public void TryInsertAt_is_successful(string before, string nodePath, string insertedFragment, string expectedAfter)
+		public void Parse_root_returns_correct_path(string path)
 		{
-			var beforeDoc = ParseDoc(before);
-			var expectedAfterDoc = ParseDoc(expectedAfter);
-			var path = UxNodePath.Parse(nodePath);
-			var inserted = ParseDoc(string.Format("<r>{0}</r>", insertedFragment)).Root.Nodes.Single();
-			inserted.Remove();
-			//Assert.That(beforeDoc.TryInsert(path, inserted), Is.True);
-			//Assert.That(beforeDoc.DeepEquals(expectedAfterDoc), Is.True);
-			Assert.Fail("TODO: Implement UxNodePathTryInsert");
-		}
-
-		[TestCase("<A/>", "/0", "<X/>", "<A><X/></A>")]
-		[TestCase("<A><B/></A>", "/0/0", "<X/>", "<A><B><X/></B></A>")]
-		[TestCase("<A>  <B/></A>", "/1/0", "<X/>", "<A>  <B><X/></B></A>")]
-		//          / (0) (1) 2/(0) ↓1
-		[TestCase("<A><B/>   <B><D/><E/></B></A>", "/2/1", "<X/>", "<A><B/>   <B><D/><X/><E/></B></A>")]
-		[TestCase("<A/>", "/0", "some text", "<A>some text</A>")]
-		[Test]
-		public void TryRemoveAt_is_successful(string expectedAfter, string nodePath, string removedFragment, string before)
-		{
-			var beforeDoc = ParseDoc(before);
-			var expectedAfterDoc = ParseDoc(expectedAfter);
-			var path = UxNodePath.Parse(nodePath);
-			var removedCompareNode = ParseDoc(string.Format("<r>{0}</r>", removedFragment)).Root.Nodes.Single();
-			removedCompareNode.Remove();
-			//Assert.That(beforeDoc.TryRemove(path, removedCompareNode), Is.True);
-			//Assert.That(beforeDoc.DeepEquals(expectedAfterDoc), Is.True);
-			Assert.Fail("TODO: Implement UxNodePath.TryRemove");
+			Assert.That(UxNodePath.Parse(path).ToString(), Is.EqualTo(path));
 		}
 	}
 }

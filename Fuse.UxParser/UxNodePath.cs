@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 
 namespace Fuse.UxParser
@@ -82,8 +81,7 @@ namespace Fuse.UxParser
 
 		public static UxNodePath Parse(string str)
 		{
-			UxNodePath path;
-			if (!TryParse(str, out path))
+			if (!TryParse(str, out var path))
 				throw new FormatException("Unable to parse XmlNodePath because provided string is not a valid path");
 			return path;
 		}
@@ -99,9 +97,10 @@ namespace Fuse.UxParser
 			var indexes = new int[parts.Length - 1];
 			for (var i = 1; i < parts.Length; i++)
 			{
-				int index;
-				if (int.TryParse(parts[i], out index))
-					indexes[i - 1] = index;
+				if (!int.TryParse(parts[i], out var index))
+					return false;
+
+				indexes[i - 1] = index;
 			}
 			path = new UxNodePath(indexes);
 			return true;

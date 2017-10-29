@@ -17,6 +17,11 @@ namespace Fuse.UxParser
 			_syntax = syntax ?? throw new ArgumentNullException(nameof(syntax));
 		}
 
+		public static UxDocument FromSyntax(DocumentSyntax syntax)
+		{
+			return new UxDocument(syntax);
+		}
+
 		public DocumentSyntax Syntax
 		{
 			get
@@ -38,6 +43,12 @@ namespace Fuse.UxParser
 			_isDirty = true;
 		}
 
+		string IUxContainerInternals.PrefixToNamespace(string prefix)
+		{
+			return Constants.DefaultNamespacePrefixes.Where(x => x.Key == prefix).Select(x => x.Value).FirstOrDefault() ??
+				Constants.DefaultFuseNamespaceList;
+		}
+
 		public IList<UxNode> Nodes => _nodeList ?? (_nodeList = new UxNode.NodeList(this, Syntax.Nodes));
 
 		Action<UxChange> IUxContainerInternals.Changed => Changed;
@@ -50,7 +61,6 @@ namespace Fuse.UxParser
 			if (uxText == null) throw new ArgumentNullException(nameof(uxText));
 			return new UxDocument(SyntaxParser.ParseDocument(uxText));
 		}
-
 
 		public IEnumerable<UxNode> DescendantNodes()
 		{

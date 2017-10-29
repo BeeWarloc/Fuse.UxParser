@@ -7,15 +7,5 @@
 			trailingTrivia) { }
 
 		public override string Text => "<!--";
-
-		public static bool TryParseCommentStartToken(Scanner scanner, out CommentStartToken token)
-		{
-			return SyntaxParser.TryParseString(
-				scanner,
-				out token,
-				"<!--",
-				(leadingWs, trailingWs) => new CommentStartToken(leadingWs, trailingWs),
-				false);
-		}
 	}
 }

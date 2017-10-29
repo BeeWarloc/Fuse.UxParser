@@ -7,12 +7,12 @@ using Fuse.UxParser.Syntax;
 
 namespace Fuse.UxParser
 {
-	public class UxElement : UxNode, IUxContainerInternals
+	public partial class UxElement : UxNode, IUxContainerInternals
 	{
 		AttributeList _attributes;
 		bool _isDirty;
 		bool _isEmpty;
-		string _name;
+		NameToken _name;
 		NodeList _nodes;
 
 		ElementSyntaxBase _syntax;
@@ -20,16 +20,21 @@ namespace Fuse.UxParser
 		public UxElement(ElementSyntaxBase syntax)
 		{
 			_syntax = syntax ?? throw new ArgumentNullException(nameof(syntax));
-			_name = _syntax.Name.Text;
+			_name = _syntax.Name;
 			_isEmpty = syntax.IsEmpty;
+		}
+
+		public static UxElement Parse(string uxText)
+		{
+			if (uxText == null) throw new ArgumentNullException(nameof(uxText));
+			return new UxElement((ElementSyntaxBase) SyntaxParser.ParseNode(uxText));
 		}
 
 		public IList<UxAttribute> Attributes => _attributes ?? (_attributes = new AttributeList(this));
 		public IList<UxNode> Nodes => _nodes ?? (_nodes = new NodeList(this, _syntax.Nodes));
 		public IEnumerable<UxElement> Elements => Nodes.OfType<UxElement>();
 
-
-		public int DescendantElementCount => ((ElementSyntaxBase) Syntax).DescendantElementCount;
+		public int DescendantElementCount => Syntax.DescendantElementCount;
 
 		public bool IsEmpty
 		{
@@ -38,15 +43,36 @@ namespace Fuse.UxParser
 			{
 				if (value != IsEmpty)
 				{
+					// Trying to set IsEmpty to true when there are nodes will not do anything
 					if (value && (_nodes?.Count ?? _syntax.Nodes.Count) > 0)
 						return;
+
 					_isEmpty = value;
 					SetDirty();
+
+					Changed?.Invoke(new UxElementIsEmptyChange(NodePath, _isEmpty));
 				}
 			}
 		}
 
+		//internal NameToken NameToken
+		//{
+		//	get => ((ElementSyntaxBase)Syntax).Name;
+		//}
+
 		public string Name
+		{
+			get => _name.Text;
+			set
+			{
+				if (value == null)
+					throw new ArgumentNullException(nameof(value));
+
+				NameToken = NameToken.With(value);
+			}
+		}
+
+		internal NameToken NameToken
 		{
 			get => _name;
 			set
@@ -56,15 +82,21 @@ namespace Fuse.UxParser
 
 				// TODO: Validate
 
-				if (value != Name)
+				if (!value.Equals(_name))
 				{
+					var oldName = _name;
+
 					_name = value;
 					SetDirty();
+
+					Changed?.Invoke(new UxElementNameChange(NodePath, oldName, _name));
 				}
 			}
 		}
 
-		public override NodeSyntax Syntax
+		protected override NodeSyntax NodeSyntax => Syntax;
+
+		public new ElementSyntaxBase Syntax
 		{
 			get
 			{
@@ -85,16 +117,17 @@ namespace Fuse.UxParser
 		public UxNode FirstNode => Nodes.FirstOrDefault();
 		public UxAttribute FirstAttribute => Attributes.FirstOrDefault();
 
-		Action<UxChange> IUxContainerInternals.Changed => Container?.Changed;
+		Action<UxChange> IUxContainerInternals.Changed => Changed;
+		Action<UxChange> Changed => Container?.Changed;
 
-		int IUxContainerInternals.NodesSourceOffset =>
-			SourceOffset + (Syntax as ElementSyntax)?.StartTag.FullSpan ??
-			throw new InvalidOperationException(
-				"Bad code path. Noone should ask for the NodesSourceOffset while underlying syntax is not an ElementSyntax");
-
-		void IUxContainerInternals.SetDirty()
+		public void AddFirst(UxNode node)
 		{
-			SetDirty();
+			Nodes.Insert(0, node);
+		}
+
+		public void Add(UxNode node)
+		{
+			Nodes.Add(node);
 		}
 
 		public void AddRawUx(string ux)
@@ -119,7 +152,7 @@ namespace Fuse.UxParser
 			else
 			{
 				// TODO: Introduce better factory methods for syntax
-				var attributeSyntax = new AttributeSyntax(
+				var attributeSyntax = AttributeSyntax.Create(
 					new NameToken(TriviaSyntax.Space, name, TriviaSyntax.Empty),
 					EqualsToken.Default,
 					new AttributeLiteralToken(
@@ -181,88 +214,17 @@ namespace Fuse.UxParser
 
 		internal override UxNode DetachedNodeClone()
 		{
-			return new UxElement((ElementSyntaxBase) Syntax);
+			return new UxElement(Syntax);
 		}
 
-		public void AddFirst(UxNode node)
+		int IUxContainerInternals.NodesSourceOffset =>
+			SourceOffset + (Syntax as ElementSyntax)?.StartTag.FullSpan ??
+			throw new InvalidOperationException(
+				"Bad code path. Noone should ask for the NodesSourceOffset while underlying syntax is not an ElementSyntax");
+
+		void IUxContainerInternals.SetDirty()
 		{
-			Nodes.Insert(0, node);
-		}
-
-		class AttributeList : WrapperList<UxAttribute, AttributeSyntaxBase>
-		{
-			public AttributeList(UxElement container) : base(
-				container,
-				container._syntax.Attributes,
-				syntax => new UxAttribute(syntax)) { }
-
-			protected override UxAttribute Attach(UxAttribute item)
-			{
-				if (item.Parent != null)
-					item = new UxAttribute(item.Syntax);
-				item.Parent = (UxElement) Container;
-				return item;
-			}
-
-			protected override void SetIndexProperty(UxAttribute item, int index)
-			{
-				item.AttributeIndex = index;
-			}
-
-			protected override int GetIndexProperty(UxAttribute item)
-			{
-				return item.AttributeIndex;
-			}
-
-			protected override void Detach(UxAttribute item)
-			{
-				item.AttributeIndex = -1;
-				item.Parent = null;
-			}
-
-			protected override void OnInsert(int index, UxAttribute item)
-			{
-				base.OnInsert(index, item);
-				var changed = Container.Changed;
-				if (changed != null)
-					changed(new UxInsertAttributeChange(item.Parent.NodePath, item.AttributeIndex, item.Syntax));
-			}
-
-			protected override void OnRemove(int index)
-			{
-				UxRemoveAttributeChange change = null;
-				var changed = Container.Changed;
-				if (changed != null)
-				{
-					var item = this[index];
-					change = new UxRemoveAttributeChange(item.Parent.NodePath, item.AttributeIndex, item.Syntax);
-				}
-
-				base.OnRemove(index);
-
-				if (change != null)
-					changed(change);
-			}
-
-			protected override void OnReplace(int index, UxAttribute item)
-			{
-				var changed = Container.Changed;
-				UxRemoveAttributeChange change = null;
-				if (changed != null)
-				{
-					var oldItem = this[index];
-					change = new UxRemoveAttributeChange(oldItem.Parent.NodePath, oldItem.AttributeIndex, oldItem.Syntax);
-				}
-
-				base.OnReplace(index, item);
-
-				if (change != null)
-				{
-					var insertedItemSyntax = item.Syntax;
-					changed(change);
-					changed(new UxInsertAttributeChange(change.NodePath, change.AttributeIndex, insertedItemSyntax));
-				}
-			}
+			SetDirty();
 		}
 	}
 }

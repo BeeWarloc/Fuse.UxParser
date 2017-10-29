@@ -10,7 +10,7 @@ namespace Fuse.UxParser
 			return OnTryApply(document);
 		}
 
-		protected abstract UxChange Invert();
+		public abstract UxChange Invert();
 
 		protected abstract bool OnTryApply(UxDocument document);
 	}

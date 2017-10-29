@@ -52,6 +52,9 @@ namespace Fuse.UxParser
 			}
 		}
 
+		public string QualifiedName => Parent?.GetQualifiedName(Name, false) ??
+			throw new InvalidOperationException("Can only provide qualified name when attached to an element.");
+
 		public string Name => Syntax.Name.Text;
 		public UxAttribute NextAttribute => Parent?.Attributes.ElementAtOrDefault(AttributeIndex + 1);
 		public UxAttribute PreviousAttribute => AttributeIndex > 0 ? Parent?.Attributes[AttributeIndex - 1] : null;
@@ -73,11 +76,8 @@ namespace Fuse.UxParser
 			_cachedUnescapedValue = null;
 			Syntax = updatedSyntax;
 			Parent.SetDirty();
-			var changed = Parent?.Container?.Changed;
-			if (changed != null)
-			{
-				changed(new UxReplaceAttributeChange(Parent.NodePath, AttributeIndex, oldSyntax, Syntax));
-			}
+			(Parent as IUxContainerInternals)?.Changed?
+				.Invoke(new UxReplaceAttributeChange(Parent.NodePath, AttributeIndex, oldSyntax, Syntax));
 		}
 
 		public bool Remove()

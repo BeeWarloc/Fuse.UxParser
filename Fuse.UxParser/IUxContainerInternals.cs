@@ -7,5 +7,6 @@ namespace Fuse.UxParser
 		Action<UxChange> Changed { get; }
 		int NodesSourceOffset { get; }
 		void SetDirty();
+		string PrefixToNamespace(string prefix);
 	}
 }

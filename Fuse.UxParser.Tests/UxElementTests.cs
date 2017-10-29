@@ -88,5 +88,21 @@ namespace Fuse.UxParser.Tests
 			root.SetAttributeValue("Foo", "Bar");
 			Assert.That(root.ToString(), Is.EqualTo("<A Foo=\"Bar\"/>"));
 		}
+
+		[Test]
+		public void Qualified_names_are_correct()
+		{
+			var doc = UxDocument.Parse(
+				"<Panel ux:Class=\"CustomPanel\" Color=\"Black\" xmlns:foo=\"foo://\"><ux:Poo /><foo:Bar /></Panel>");
+			var el = doc.Root;
+			Assert.That(el.Attributes[0].QualifiedName, Is.EqualTo("{http://schemas.fusetools.com/ux}Class"));
+			Assert.That(el.Attributes[1].QualifiedName, Is.EqualTo("Color"));
+			Assert.That(
+				el.QualifiedName,
+				Is.EqualTo(
+					"{Fuse, Fuse.Reactive, Fuse.Selection, Fuse.Animations, Fuse.Drawing, Fuse.Entities, Fuse.Controls, Fuse.Layouts, Fuse.Elements, Fuse.Effects, Fuse.Triggers, Fuse.Navigation, Fuse.Triggers.Actions, Fuse.Gestures, Fuse.Resources, Fuse.Native, Fuse.Physics, Fuse.Vibration, Fuse.Motion, Fuse.Testing, Uno.UX}Panel"));
+			Assert.That(el.Elements.ElementAt(0).QualifiedName, Is.EqualTo("{http://schemas.fusetools.com/ux}Poo"));
+			Assert.That(el.Elements.ElementAt(1).QualifiedName, Is.EqualTo("{foo://}Bar"));
+		}
 	}
 }

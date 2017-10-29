@@ -2,19 +2,29 @@
 
 namespace Fuse.UxParser.Syntax
 {
-	public struct TriviaSyntax
+	public struct TriviaSyntax : ISyntax
 	{
 		readonly string _whitespace;
 
-		public TriviaSyntax(string whitespace)
+		TriviaSyntax(string whitespace)
 		{
 			_whitespace = whitespace ?? throw new ArgumentNullException(nameof(whitespace));
+		}
+
+		public static TriviaSyntax Create(string whitespace)
+		{
+			if (string.IsNullOrEmpty(whitespace))
+				return Empty;
+			if (whitespace == " ")
+				return Space;
+			return new TriviaSyntax(whitespace);
 		}
 
 		public string Whitespace => _whitespace ?? string.Empty;
 
 		public static TriviaSyntax Empty { get; } = new TriviaSyntax();
 		public static TriviaSyntax Space { get; } = new TriviaSyntax(" ");
+		public bool IsEmpty => Whitespace.Length == 0;
 
 		public bool Equals(TriviaSyntax other)
 		{
@@ -41,5 +51,7 @@ namespace Fuse.UxParser.Syntax
 		{
 			return !left.Equals(right);
 		}
+
+		public int FullSpan => Whitespace.Length;
 	}
 }

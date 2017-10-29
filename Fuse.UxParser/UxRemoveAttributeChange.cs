@@ -19,7 +19,7 @@ namespace Fuse.UxParser
 		public int AttributeIndex { get; }
 		public AttributeSyntaxBase Attribute { get; }
 
-		protected override UxChange Invert()
+		public override UxChange Invert()
 		{
 			return new UxInsertAttributeChange(NodePath, AttributeIndex, Attribute);
 		}

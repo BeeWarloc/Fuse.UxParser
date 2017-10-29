@@ -22,15 +22,14 @@ namespace Fuse.UxParser
 		public AttributeSyntaxBase OldAttribute { get; }
 		public AttributeSyntaxBase NewAttribute { get; }
 
-		protected override UxChange Invert()
+		public override UxChange Invert()
 		{
 			return new UxReplaceAttributeChange(NodePath, AttributeIndex, NewAttribute, OldAttribute);
 		}
 
 		protected override bool OnTryApply(UxDocument document)
 		{
-			UxElement node;
-			if (!NodePath.TryFind(document, out node))
+			if (!NodePath.TryFind(document, out UxElement node))
 				return false;
 
 			var attr = node.Attributes.ElementAtOrDefault(AttributeIndex);

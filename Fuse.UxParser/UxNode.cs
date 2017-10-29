@@ -43,7 +43,10 @@ namespace Fuse.UxParser
 
 		public UxNodePath NodePath => UxNodePath.From(this);
 
-		public abstract NodeSyntax Syntax { get; }
+		public NodeSyntax Syntax => NodeSyntax;
+
+		protected abstract NodeSyntax NodeSyntax { get; }
+
 		public abstract XmlNodeType NodeType { get; }
 
 		public int SourceOffset
@@ -105,10 +108,16 @@ namespace Fuse.UxParser
 			return GetDescendantNodes(false);
 		}
 
-		public void AddAfterSelf(UxNode dstNode)
+		public void AddAfterSelf(UxNode node)
 		{
 			EnsureAttached();
-			Container.Nodes.Insert(NodeIndex + 1, dstNode);
+			Container.Nodes.Insert(NodeIndex + 1, node);
+		}
+
+		public void AddBeforeSelf(UxNode node)
+		{
+			EnsureAttached();
+			Container.Nodes.Insert(NodeIndex, node);
 		}
 
 		void EnsureAttached()
@@ -157,11 +166,13 @@ namespace Fuse.UxParser
 
 			protected override void OnInsert(int index, UxNode item)
 			{
+				var parentElement = Container as UxElement;
+				if (parentElement != null && parentElement.IsEmpty)
+					parentElement.IsEmpty = false;
+
 				base.OnInsert(index, item);
 
-				var changed = Container.Changed;
-				if (changed != null)
-					changed(new UxInsertNodeChange(item.NodePath, item.Syntax));
+				Container.Changed?.Invoke(new UxInsertNodeChange(item.NodePath, item.Syntax));
 			}
 
 			protected override void OnRemove(int index)
@@ -192,8 +203,7 @@ namespace Fuse.UxParser
 				if (oldSyntax != null)
 				{
 					var path = item.NodePath;
-					changed(new UxRemoveNodeChange(path, oldSyntax));
-					changed(new UxInsertNodeChange(path, item.Syntax));
+					changed(new UxReplaceNodeChange(path, oldSyntax, item.Syntax));
 				}
 			}
 		}
@@ -344,9 +354,9 @@ namespace Fuse.UxParser
 			{
 				// NOCOMMIT! for debugging!!!
 
-				for (var i = 0; i < _inner.Count; i++)
-					if (GetIndexProperty(_inner[i]) != i)
-						throw new InvalidOperationException("Ids not properly updated..");
+				//for (var i = 0; i < _inner.Count; i++)
+				//	if (GetIndexProperty(_inner[i]) != i)
+				//		throw new InvalidOperationException("Ids not properly updated..");
 
 				// NOCOMMIT! end debugging!
 
@@ -355,5 +365,14 @@ namespace Fuse.UxParser
 		}
 
 		public abstract void ReplaceSyntax(NodeSyntax newSyntax);
+
+		public void ReplaceWith(UxNode node)
+		{
+			if (node == null) throw new ArgumentNullException(nameof(node));
+			if (Container == null)
+				throw new InvalidOperationException("Can't replace node with another because the node is not in a container");
+
+			Container.Nodes[NodeIndex] = node.Container != null ? node.DetachedNodeClone() : node;
+		}
 	}
 }

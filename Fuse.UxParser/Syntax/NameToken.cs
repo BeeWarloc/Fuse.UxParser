@@ -8,7 +8,10 @@
 			Text = text;
 		}
 
+		public static NameToken Missing { get; } = new NameToken(TriviaSyntax.Empty, string.Empty, TriviaSyntax.Empty);
+
 		public override string Text { get; }
+		public override bool IsMissing => Text.Length == 0;
 
 		public NameToken With(string text)
 		{

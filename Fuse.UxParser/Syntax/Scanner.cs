@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Fuse.UxParser.Syntax
 {
@@ -7,6 +8,8 @@ namespace Fuse.UxParser.Syntax
 	/// </summary>
 	public class Scanner
 	{
+		readonly Dictionary<string, string> _parseDict = new Dictionary<string, string>();
+
 		readonly string _str;
 		int _pos;
 
@@ -25,11 +28,6 @@ namespace Fuse.UxParser.Syntax
 			return new ParseScope(this);
 		}
 
-		public TriviaSyntax ScanWhitespace()
-		{
-			return SyntaxParser.ParseWhitespace(this);
-		}
-
 		public int Peek()
 		{
 			return _pos < _str.Length ? _str[_pos] : -1;
@@ -45,6 +43,9 @@ namespace Fuse.UxParser.Syntax
 			}
 			result = _str.Substring(_pos, matchPos - _pos);
 			_pos = matchPos;
+
+			Deduplicate(ref result);
+
 			return true;
 		}
 
@@ -63,6 +64,8 @@ namespace Fuse.UxParser.Syntax
 			result = _str.Substring(_pos, endPos - _pos);
 			_pos = endPos;
 
+			Deduplicate(ref result);
+
 			// Always succeeds, there's always zero available
 			return true;
 		}
@@ -80,6 +83,8 @@ namespace Fuse.UxParser.Syntax
 			}
 			result = _str.Substring(_pos, endPos - _pos);
 			_pos = endPos;
+
+			Deduplicate(ref result);
 
 			// Always succeeds, there's always zero available
 			return true;
@@ -143,6 +148,15 @@ namespace Fuse.UxParser.Syntax
 			{
 				_rollbackPos = -1;
 			}
+		}
+
+		void Deduplicate(ref string result)
+		{
+			if (result.Length < 42)
+				if (_parseDict.TryGetValue(result, out var dedupedResult))
+					result = dedupedResult;
+				else
+					_parseDict[result] = result;
 		}
 	}
 }

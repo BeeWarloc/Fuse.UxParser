@@ -11,7 +11,7 @@ namespace Fuse.UxParser.Syntax
 		public abstract int DescendantElementCount { get; }
 
 		public abstract ElementSyntaxBase With(
-			string name = null,
+			NameToken name = null,
 			IImmutableList<AttributeSyntaxBase> attributes = null,
 			IImmutableList<NodeSyntax> nodes = null,
 			bool? isEmpty = null);

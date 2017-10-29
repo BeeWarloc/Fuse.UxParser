@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Fuse.UxParser", "Fuse.UxPar
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fuse.UxParser.Tests", "Fuse.UxParser.Tests\Fuse.UxParser.Tests.csproj", "{362F7416-A720-4C25-A358-94E96310687D}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sandox", "sandox", "{4566B4D7-0A21-493C-ADA8-61530135523A}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sandbox", "sandbox", "{4566B4D7-0A21-493C-ADA8-61530135523A}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "XmlExperimentation", "sandbox\XmlExperimentation\XmlExperimentation.csproj", "{2A872930-F7EE-44E9-901B-3869681AD768}"
 EndProject

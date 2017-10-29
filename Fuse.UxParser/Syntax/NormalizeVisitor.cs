@@ -6,7 +6,7 @@ namespace Fuse.UxParser.Syntax
 	{
 		AttributeSyntax NormalizeAttribute(AttributeSyntax syntax, bool isLast)
 		{
-			return new AttributeSyntax(
+			return AttributeSyntax.Create(
 				syntax.Name.WithTrivia(TriviaSyntax.Space, TriviaSyntax.Empty),
 				syntax.Eq.WithTrivia(TriviaSyntax.Empty, TriviaSyntax.Empty),
 				syntax.Literal.With(literalKind: AttributeLiteralKind.DoubleQuoted)
@@ -17,21 +17,21 @@ namespace Fuse.UxParser.Syntax
 		{
 			var attributes = VisitAttributes(syntax.Attributes);
 			return new EmptyElementSyntax(
-				new LessThanToken(TriviaSyntax.Empty, TriviaSyntax.Empty),
+				LessThanToken.Create(TriviaSyntax.Empty, TriviaSyntax.Empty),
 				syntax.Name.WithTrivia(TriviaSyntax.Empty, TriviaSyntax.Empty),
 				attributes,
-				new SlashToken(TriviaSyntax.Empty, TriviaSyntax.Empty),
-				new GreaterThanToken(TriviaSyntax.Empty, TriviaSyntax.Empty));
+				SlashToken.Create(TriviaSyntax.Empty, TriviaSyntax.Empty),
+				GreaterThanToken.Create(TriviaSyntax.Empty, TriviaSyntax.Empty));
 		}
 
 		protected override SyntaxBase VisitElementStartTag(ElementStartTagSyntax syntax)
 		{
 			var attributes = VisitAttributes(syntax.Attributes);
-			return new ElementStartTagSyntax(
-				new LessThanToken(TriviaSyntax.Empty, TriviaSyntax.Empty),
+			return ElementStartTagSyntax.Create(
+				LessThanToken.Create(TriviaSyntax.Empty, TriviaSyntax.Empty),
 				syntax.Name.WithTrivia(TriviaSyntax.Empty, TriviaSyntax.Empty),
 				attributes,
-				new GreaterThanToken(TriviaSyntax.Empty, TriviaSyntax.Empty));
+				GreaterThanToken.Create(TriviaSyntax.Empty, TriviaSyntax.Empty));
 		}
 
 		IImmutableList<AttributeSyntaxBase> VisitAttributes(IImmutableList<AttributeSyntaxBase> attributes)

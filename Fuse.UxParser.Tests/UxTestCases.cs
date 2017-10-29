@@ -9,7 +9,7 @@ namespace Fuse.UxParser.Tests
 	public static class UxTestCases
 	{
 		public static IEnumerable<TestCaseData> ExampleDocsAndFuseSamples =>
-			ExampleDocs().Concat(FuseSamples()).OrderBy(x => (x.Arguments?[0] as string)?.Length);
+			ExampleDocs().Concat(FuseSamples()).Concat(HikrApp()).OrderBy(x => (x.Arguments?[0] as string)?.Length);
 
 		static string SolutionDirectory
 		{
@@ -27,6 +27,11 @@ namespace Fuse.UxParser.Tests
 			return GetTestCaseDataForAllUxDocsRecursively(Path.Combine(SolutionDirectory, "..", "example-docs"));
 		}
 
+		public static IEnumerable<TestCaseData> HikrApp()
+		{
+			return GetTestCaseDataForAllUxDocsRecursively(Path.Combine(SolutionDirectory, "..", "hikr"));
+		}
+
 		public static IEnumerable<TestCaseData> FuseSamples()
 		{
 			return GetTestCaseDataForAllUxDocsRecursively(Path.Combine(SolutionDirectory, "..", "fuse-samples"));
@@ -38,10 +43,11 @@ namespace Fuse.UxParser.Tests
 			if (!Directory.Exists(directory))
 				throw new DirectoryNotFoundException($"Unable to locate ux example dir {directory}");
 
+			var containingDir = (Path.GetDirectoryName(directory) ?? directory) + Path.DirectorySeparatorChar;
 			foreach (var fn in Directory.GetFiles(directory, "*.ux", SearchOption.AllDirectories))
 			{
 				var str = File.ReadAllText(fn);
-				yield return new TestCaseData(str) { TestName = $"len{str.Length:D5}{fn.Substring(directory.Length)}" };
+				yield return new TestCaseData(str) { TestName = fn.Substring(containingDir.Length) };
 			}
 		}
 	}

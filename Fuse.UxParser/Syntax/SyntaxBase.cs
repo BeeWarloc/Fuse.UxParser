@@ -7,12 +7,12 @@ using System.Reflection;
 
 namespace Fuse.UxParser.Syntax
 {
-	public abstract class SyntaxBase
+	public abstract class SyntaxBase : ISyntax
 	{
 		static readonly ConcurrentDictionary<Type, IList<Func<SyntaxBase, object>>> _childNodePropertyMaps =
 			new ConcurrentDictionary<Type, IList<Func<SyntaxBase, object>>>();
 
-		int? _cachedHashCode;
+		int _cachedHashCode;
 
 		public abstract TriviaSyntax LeadingTrivia { get; }
 
@@ -82,6 +82,9 @@ namespace Fuse.UxParser.Syntax
 				if (ReferenceEquals(thisChild, otherChild))
 					continue;
 
+				if (thisChild.Equals(otherChild))
+					continue;
+
 				if (thisChild is IEnumerable<SyntaxBase> thisChildAsSyntaxList &&
 					otherChild is IEnumerable<SyntaxBase> otherChildAsSyntaxList &&
 					thisChildAsSyntaxList.SequenceEqual(otherChildAsSyntaxList))
@@ -92,22 +95,30 @@ namespace Fuse.UxParser.Syntax
 					thisChildAsTokenList.SequenceEqual(otherChildAsTokenList))
 					continue;
 
-				if (!thisChild.Equals(otherChild))
-					return false;
+				return false;
 			}
 			return true;
 		}
 
 		public override int GetHashCode()
 		{
-			if (_cachedHashCode.HasValue)
-				return _cachedHashCode.Value;
+			if (_cachedHashCode != 0)
+				return _cachedHashCode;
 
+			var hashCode = CalcHashCode();
+			_cachedHashCode = hashCode;
+			return hashCode;
+		}
+
+		int CalcHashCode()
+		{
 			var hashCode = -811868959;
 			foreach (var getter in ChildNodePropertyGetters)
 				hashCode = hashCode * -1521134295 + getter(this).GetHashCode();
-			_cachedHashCode = hashCode;
-			return hashCode;
+
+			// Avoid 0 since that's used to indicate hashcode is not yet calculated
+			// We avoid using nullable her for size optimization.
+			return hashCode == 0 ? -1 : hashCode;
 		}
 
 		public override string ToString()

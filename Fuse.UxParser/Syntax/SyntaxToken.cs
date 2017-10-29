@@ -3,7 +3,7 @@
 namespace Fuse.UxParser.Syntax
 {
 	// TODO: it's possible that the tokens should be structs
-	public abstract class SyntaxToken
+	public abstract class SyntaxToken : ISyntax
 	{
 		protected SyntaxToken(TriviaSyntax leadingTrivia, TriviaSyntax trailingTrivia)
 		{
@@ -16,6 +16,8 @@ namespace Fuse.UxParser.Syntax
 		public TriviaSyntax TrailingTrivia { get; }
 
 		public int FullSpan => LeadingTrivia.Whitespace.Length + Text.Length + TrailingTrivia.Whitespace.Length;
+
+		public virtual bool IsMissing => false;
 
 		protected bool Equals(SyntaxToken other)
 		{

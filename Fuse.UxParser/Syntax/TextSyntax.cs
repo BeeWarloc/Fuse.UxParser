@@ -17,6 +17,14 @@ namespace Fuse.UxParser.Syntax
 		public override TriviaSyntax LeadingTrivia => Value.LeadingTrivia;
 		public override TriviaSyntax TrailingTrivia => Value.TrailingTrivia;
 
+		public NodeSyntax With(EncodedTextToken value)
+		{
+			if (value == null || value.Equals(Value))
+				return this;
+
+			return new TextSyntax(value);
+		}
+
 		public override void Write(TextWriter writer)
 		{
 			Value.Write(writer);

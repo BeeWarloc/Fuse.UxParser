@@ -6,17 +6,16 @@ namespace Fuse.UxParser
 {
 	public class UxText : UxNode
 	{
-		TextSyntax _syntax;
 		string _cachedUnescapedText;
 
 		public UxText(TextSyntax syntax)
 		{
-			_syntax = syntax ?? throw new ArgumentNullException(nameof(syntax));
+			Syntax = syntax ?? throw new ArgumentNullException(nameof(syntax));
 		}
 
 		public string Value
 		{
-			get => _cachedUnescapedText ?? (_cachedUnescapedText = UxTextEncoding.Unescape(_syntax.Value.Text));
+			get => _cachedUnescapedText ?? (_cachedUnescapedText = UxTextEncoding.Unescape(Syntax.Value.Text));
 			set
 			{
 				if (value == null)
@@ -29,29 +28,40 @@ namespace Fuse.UxParser
 
 				if (Value != value)
 				{
-					ReplaceSyntax(new TextSyntax(new EncodedTextToken(UxTextEncoding.EncodeText(value))));
-					_cachedUnescapedText = value;
+					var encodedText = UxTextEncoding.EncodeText(value);
+					ReplaceSyntax(new TextSyntax(new EncodedTextToken(encodedText)), value);
 				}
 			}
 		}
 
-		public override NodeSyntax Syntax => _syntax;
+		protected override NodeSyntax NodeSyntax => Syntax;
+
+		public new TextSyntax Syntax { get; set; }
+
 		public override XmlNodeType NodeType => XmlNodeType.Text;
 
 		internal override UxNode DetachedNodeClone()
 		{
-			return new UxText(_syntax);
+			return new UxText(Syntax);
 		}
 
 		public override void ReplaceSyntax(NodeSyntax newSyntax)
 		{
 			if (newSyntax == null) throw new ArgumentNullException(nameof(newSyntax));
-			if (!(_syntax is TextSyntax newTextSyntax))
+			if (!(newSyntax is TextSyntax newTextSyntax))
 				throw new ArgumentException("UxText can only have its syntax replaced by TextSyntax object");
 
-			_cachedUnescapedText = null;
-			_syntax = newTextSyntax;
+			ReplaceSyntax(newTextSyntax, null);
+		}
+
+		void ReplaceSyntax(TextSyntax newSyntax, string unescapedText)
+		{
+			var oldSyntax = Syntax;
+			_cachedUnescapedText = unescapedText;
+			Syntax = newSyntax;
 			SetDirty();
+
+			Container?.Changed?.Invoke(new UxReplaceNodeChange(NodePath, oldSyntax, newSyntax));
 		}
 	}
 }

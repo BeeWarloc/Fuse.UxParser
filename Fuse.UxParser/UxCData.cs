@@ -6,16 +6,14 @@ namespace Fuse.UxParser
 {
 	public class UxCData : UxNode
 	{
-		CDataSyntax _syntax;
-
 		public UxCData(CDataSyntax syntax)
 		{
-			_syntax = syntax ?? throw new ArgumentNullException(nameof(syntax));
+			Syntax = syntax ?? throw new ArgumentNullException(nameof(syntax));
 		}
 
 		public string Value
 		{
-			get => _syntax.Value.Text;
+			get => Syntax.Value.Text;
 			set
 			{
 				if (value == null)
@@ -27,28 +25,31 @@ namespace Fuse.UxParser
 					throw new ArgumentException("Value must not contain CData end marker");
 
 				if (Value != value)
-				{
-					ReplaceSyntax(new CDataSyntax(_syntax.Start, new EncodedTextToken(value), _syntax.End));
-				}
+					ReplaceSyntax(new CDataSyntax(Syntax.Start, new EncodedTextToken(value), Syntax.End));
 			}
 		}
 
-		public override NodeSyntax Syntax => _syntax;
+		protected override NodeSyntax NodeSyntax => Syntax;
+		public new CDataSyntax Syntax { get; set; }
+
 		public override XmlNodeType NodeType => XmlNodeType.CDATA;
 
 		internal override UxNode DetachedNodeClone()
 		{
-			return new UxCData(_syntax);
+			return new UxCData(Syntax);
 		}
 
 		public override void ReplaceSyntax(NodeSyntax newSyntax)
 		{
 			if (newSyntax == null) throw new ArgumentNullException(nameof(newSyntax));
-			if (!(_syntax is CDataSyntax newCDataSyntax))
-				throw new ArgumentException("UxText can only have its syntax replaced by TextSyntax object");
+			if (!(newSyntax is CDataSyntax newCDataSyntax))
+				throw new ArgumentException("UxText can only have its syntax replaced by CDataSyntax object");
 
-			_syntax = newCDataSyntax;
+			var oldSyntax = Syntax;
+			Syntax = newCDataSyntax;
 			SetDirty();
+
+			Container?.Changed?.Invoke(new UxReplaceNodeChange(NodePath, oldSyntax, newCDataSyntax));
 		}
 	}
 }

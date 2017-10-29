@@ -2,12 +2,20 @@
 {
 	public class EqualsToken : SyntaxToken
 	{
-		public EqualsToken(TriviaSyntax leadingTrivia, TriviaSyntax trailingTrivia)
+		EqualsToken(TriviaSyntax leadingTrivia, TriviaSyntax trailingTrivia)
 			: base(leadingTrivia, trailingTrivia) { }
 
 		public static EqualsToken Default { get; } = new EqualsToken(TriviaSyntax.Empty, TriviaSyntax.Empty);
 
 		public override string Text => "=";
+
+		public static EqualsToken Create(TriviaSyntax leadingTrivia, TriviaSyntax trailingTrivia)
+		{
+			if (leadingTrivia.IsEmpty && trailingTrivia.IsEmpty)
+				return Default;
+			return new EqualsToken(leadingTrivia, trailingTrivia);
+		}
+
 
 		public EqualsToken WithTrivia(TriviaSyntax? leadingTrivia, TriviaSyntax? trailingTrivia)
 		{

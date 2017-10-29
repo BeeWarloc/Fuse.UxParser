@@ -47,32 +47,32 @@ namespace Fuse.UxParser.Syntax
 		public override TriviaSyntax TrailingTrivia => EndTag.TrailingTrivia;
 
 		public override ElementSyntaxBase With(
-			string name = null,
+			NameToken name = null,
 			IImmutableList<AttributeSyntaxBase> attributes = null,
 			IImmutableList<NodeSyntax> nodes = null,
 			bool? isEmpty = null)
 		{
-			name = name ?? Name.Text;
+			name = name ?? Name;
 			nodes = nodes ?? Nodes;
 			attributes = attributes ?? Attributes;
 
 			if ((isEmpty ?? false) && nodes.Count == 0)
 				return new EmptyElementSyntax(
 					StartTag.LessThan,
-					StartTag.Name.With(name),
+					Name,
 					attributes,
 					SlashToken.Default,
 					EndTag.GreaterThan);
 
-			if (name.Equals(Name.Text) &&
+			if (name.Equals(Name) &&
 				(attributes.Equals(Attributes) || attributes.SequenceEqual(Attributes)) &&
 				(nodes.Equals(Nodes) || nodes.SequenceEqual(Nodes)))
 				return this;
 
 			return new ElementSyntax(
-				StartTag.With(StartTag.Name.With(name), attributes),
+				StartTag.With(name, attributes),
 				nodes,
-				EndTag.With(EndTag.Name.With(name)));
+				EndTag.With(EndTag.Name.With(name.Text)));
 		}
 
 		public override void Write(TextWriter writer)

@@ -48,31 +48,31 @@ namespace Fuse.UxParser.Syntax
 		public override TriviaSyntax TrailingTrivia => GreaterThan.TrailingTrivia;
 
 		public override ElementSyntaxBase With(
-			string name = null,
+			NameToken name = null,
 			IImmutableList<AttributeSyntaxBase> attributes = null,
 			IImmutableList<NodeSyntax> nodes = null,
 			bool? isEmpty = null)
 		{
-			name = name ?? Name.Text;
+			name = name ?? Name;
 			nodes = nodes ?? Nodes;
 			attributes = attributes ?? Attributes;
 
 			if ((isEmpty ?? true) && nodes.Count == 0)
 			{
-				if (name.Equals(Name.Text) &&
+				if (name.Equals(Name) &&
 					(attributes.Equals(Attributes) || attributes.SequenceEqual(Attributes)))
 					return this;
 
-				return new EmptyElementSyntax(LessThan, Name.With(name), attributes, Slash, GreaterThan);
+				return new EmptyElementSyntax(LessThan, name, attributes, Slash, GreaterThan);
 			}
 
 			return new ElementSyntax(
-				new ElementStartTagSyntax(LessThan, Name.With(name), attributes, GreaterThanToken.Default),
+				ElementStartTagSyntax.Create(LessThan, name, attributes, GreaterThanToken.Default),
 				nodes,
 				new ElementEndTagSyntax(
 					LessThanToken.Default,
 					SlashToken.Default,
-					new NameToken(TriviaSyntax.Empty, name, TriviaSyntax.Empty),
+					name,
 					GreaterThan));
 		}
 

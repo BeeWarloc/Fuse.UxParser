@@ -88,7 +88,9 @@ namespace Fuse.UxParser.Tests.Syntax
 				typeof(SyntaxBase)
 					.Assembly
 					.ExportedTypes
-					.Where(type => typeof(SyntaxBase).IsAssignableFrom(type) && !type.IsAbstract);
+					.Where(
+						type => (typeof(SyntaxBase).IsAssignableFrom(type) || typeof(SyntaxToken).IsAssignableFrom(type)) &&
+							!type.IsAbstract);
 
 			sb.AppendLine("public class SyntaxVisitor\r\n{\r\n");
 
@@ -96,10 +98,28 @@ namespace Fuse.UxParser.Tests.Syntax
 
 			foreach (var type in types)
 			{
-				Assert.That(type.Name.EndsWith("Syntax"), "{0} don't end with Syntax", type.Name);
-				var nameWithoutSuffix = type.Name.Substring(0, type.Name.Length - "Syntax".Length);
-				sb.AppendFormat("protected virtual SyntaxBase Visit{0}({1} syntax)\r\n{{\r\n", nameWithoutSuffix, type.Name);
-				var invoke = "return new " + type.Name + "(";
+				string expectedSuffix;
+				Type baseType;
+				if (typeof(SyntaxToken).IsAssignableFrom(type))
+				{
+					baseType = typeof(SyntaxToken);
+					expectedSuffix = "Token";
+				}
+				else if (typeof(SyntaxBase).IsAssignableFrom(type))
+				{
+					baseType = typeof(SyntaxBase);
+					expectedSuffix = "Syntax";
+				}
+				else
+				{
+					continue;
+				}
+
+				var paramName = expectedSuffix.ToLower();
+				Assert.That(type.Name.EndsWith(expectedSuffix), "{0} don't end with {1}", type.Name, expectedSuffix);
+				var nameWithoutSuffix = type.Name.Substring(0, type.Name.Length - expectedSuffix.Length);
+				sb.Append($"    protected virtual {baseType.Name} Visit{nameWithoutSuffix}({type.Name} {paramName})\r\n    {{\r\n");
+				var invoke = "            return new " + type.Name + "(";
 				var ctor = type.GetConstructors().OrderByDescending(x => x.GetParameters().Length).Single();
 
 				var isFirstParam = true;
@@ -109,7 +129,7 @@ namespace Fuse.UxParser.Tests.Syntax
 				foreach (var prop in type.GetProperties().Where(x => x.GetCustomAttribute<NodeChildAttribute>() != null)
 					.OrderBy(x => x.GetCustomAttribute<NodeChildAttribute>().OrderIndex))
 				{
-					var paramName = ctor.GetParameters()
+					var argName = ctor.GetParameters()
 						.Single(x => string.Equals(prop.Name, x.Name, StringComparison.OrdinalIgnoreCase)).Name;
 
 					if (!isFirstParam)
@@ -118,32 +138,37 @@ namespace Fuse.UxParser.Tests.Syntax
 
 					var propType = prop.PropertyType;
 					if (typeof(SyntaxBase).IsAssignableFrom(propType) ||
+						typeof(SyntaxToken).IsAssignableFrom(propType) ||
 						propType.IsGenericType && propType.GetGenericTypeDefinition() == typeof(IImmutableList<>))
 					{
-						sb.AppendFormat("var {0} = VisitAndConvert(syntax.{1});\r\n", paramName, prop.Name);
-						invoke += paramName;
+						sb.AppendFormat("        var {0} = VisitAndConvert({1}.{2});\r\n", argName, paramName, prop.Name);
+						invoke += argName;
 						if (hasVisitedChild)
-							equalCheck += " && ";
-						equalCheck += $"Equals(syntax.{prop.Name}, {paramName})";
+							equalCheck += " &&\r\n            ";
+						equalCheck += $"Equals({paramName}.{prop.Name}, {argName})";
 						hasVisitedChild = true;
 					}
 					else
 					{
-						invoke += "syntax." + prop.Name;
+						invoke += $"{paramName}.{prop.Name}";
 					}
 				}
 				invoke += ");";
 				if (hasVisitedChild)
-					sb.AppendFormat("if ({0}) return syntax; else {{\r\n{1}\r\n}}\r\n", equalCheck, invoke);
+					sb.Append(
+						$"        if ({equalCheck})\r\n        {{\r\n            return {paramName};\r\n        }}\r\n        else\r\n        {{\r\n{invoke}\r\n        }}\r\n");
 				else
-					sb.AppendLine("return syntax;");
-				sb.AppendLine("}");
+					sb.AppendLine($"        return {paramName};");
+				sb.AppendLine("    }");
 
-				visitSwitch += string.Format("case {0} s:\r\n\treturn Visit{1}(s);\r\n", type.Name, nameWithoutSuffix);
+				visitSwitch += string.Format(
+					"        case {0} s:\r\n            return Visit{1}(s);\r\n",
+					type.Name,
+					nameWithoutSuffix);
 			}
 
 			sb.AppendFormat(
-				"public virtual SyntaxBase Visit(SyntaxBase syntax)\r\n{{\r\nswitch(syntax)\r\n{{\r\n{0}default:\r\n\tthrow new InvalidOperationException(\"syntax not recognized\");\r\n}}\r\n}}\r\n",
+				"    public virtual ISyntax Visit(ISyntax syntax)\r\n    {{\r\n        switch(syntax)\r\n        {{\r\n{0}            default:\r\n\tthrow new InvalidOperationException(\"syntax not recognized\");\r\n        }}\r\n    }}\r\n",
 				visitSwitch);
 
 			sb.AppendLine("}");

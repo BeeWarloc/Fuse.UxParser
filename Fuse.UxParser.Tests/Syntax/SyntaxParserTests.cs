@@ -9,6 +9,22 @@ namespace Fuse.UxParser.Tests.Syntax
 	[TestFixture]
 	public class SyntaxParserTests
 	{
+		[TestCase("<Foo><Bar></Foo>")]
+		[TestCase("<Fooss <Bar></Foo>")]
+		[TestCase("<Foossa>Bsssar></Foo  ;k8798&^shjj>")]
+		[Test]
+		public void Parse_syntax_errors_roundtrip(string input)
+		{
+			var syntax = SyntaxParser.ParseDocument(input);
+			Assert.That(syntax.ToString(), Is.EqualTo(input));
+			Assert.That(syntax.FullSpan, Is.EqualTo(input.Length));
+			Assert.That(string.Concat(syntax.AllTokens), Is.EqualTo(input));
+
+			// Check that equals works
+			var syntaxReparsed = SyntaxParser.ParseDocument(input);
+			Assert.That(syntax, Is.EqualTo(syntaxReparsed));
+		}
+
 		[TestCase("<Foo />", "<Boo />", false)]
 		[TestCase("<Foo></Foo>", "<Boo></Boo>", false)]
 		public void Equals_test(string aux, string bux, bool expected)
@@ -44,25 +60,21 @@ namespace Fuse.UxParser.Tests.Syntax
 		[Test]
 		public void Parse_roundtrip(string input)
 		{
-			Assert.That(SyntaxParser.TryParseDocumentSyntax(new Scanner(input), out var syntax), Is.True);
+			var syntax = SyntaxParser.ParseDocument(input);
 			Assert.That(syntax.ToString(), Is.EqualTo(input));
 			Assert.That(syntax.FullSpan, Is.EqualTo(input.Length));
 			Assert.That(string.Concat(syntax.AllTokens), Is.EqualTo(input));
 
 			// Check that equals works
-			SyntaxParser.TryParseDocumentSyntax(new Scanner(input), out var syntaxReparsed);
+			var syntaxReparsed = SyntaxParser.ParseDocument(input);
 			Assert.That(syntax, Is.EqualTo(syntaxReparsed));
 		}
-
 
 		[Test]
 		[TestCaseSource(typeof(UxTestCases), nameof(UxTestCases.ExampleDocsAndFuseSamples))]
 		public void Parse_roundtrip_from_all_ux_files_in_directory(string input)
 		{
-			Assert.That(
-				SyntaxParser.TryParseDocumentSyntax(new Scanner(input), out var syntax),
-				Is.True,
-				"Unable to parse:\r\n" + input);
+			var syntax = SyntaxParser.ParseDocument(input);
 			Assert.That(syntax.ToString(), Is.EqualTo(input));
 			Assert.That(syntax.FullSpan, Is.EqualTo(input.Length));
 			Assert.That(string.Concat(syntax.AllTokens), Is.EqualTo(input));
@@ -78,7 +90,7 @@ namespace Fuse.UxParser.Tests.Syntax
 			{
 				input = reader.ReadToEnd();
 			}
-			Assert.That(SyntaxParser.TryParseElementSyntax(new Scanner(input), out var syntax), Is.True);
+			var syntax = SyntaxParser.ParseDocument(input);
 			Assert.That(syntax.ToString(), Is.EqualTo(input));
 			Assert.That(syntax.FullSpan, Is.EqualTo(input.Length));
 			Assert.That(string.Concat(syntax.AllTokens), Is.EqualTo(input));
