@@ -1,14 +1,20 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 
 namespace Fuse.UxParser.Syntax
 {
 	public class CommentSyntax : NodeSyntax
 	{
-		public CommentSyntax(CommentStartToken start, EncodedTextToken value, CommentEndToken end)
+		CommentSyntax(CommentStartToken start, EncodedTextToken value, CommentEndToken end)
 		{
-			Start = start;
-			Value = value;
-			End = end;
+			Start = start ?? throw new ArgumentNullException(nameof(start));
+			Value = value ?? throw new ArgumentNullException(nameof(value));
+			End = end ?? throw new ArgumentNullException(nameof(end));
+		}
+
+		public static CommentSyntax Create(CommentStartToken start, EncodedTextToken value, CommentEndToken end)
+		{
+			return new CommentSyntax(start, value, end);
 		}
 
 		[NodeChild(0)]
@@ -35,7 +41,7 @@ namespace Fuse.UxParser.Syntax
 
 		public CommentSyntax With(string value)
 		{
-			return new CommentSyntax(Start, new EncodedTextToken(value), End);
+			return Create(Start, new EncodedTextToken(value), End);
 		}
 	}
 }

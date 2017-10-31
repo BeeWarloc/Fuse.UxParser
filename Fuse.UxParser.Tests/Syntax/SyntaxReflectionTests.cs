@@ -12,21 +12,8 @@ namespace Fuse.UxParser.Tests.Syntax
 	[TestFixture]
 	public class SyntaxReflectionTests
 	{
-		static bool IsValidNodeChild(PropertyInfo prop)
-		{
-			return typeof(SyntaxBase).IsAssignableFrom(prop.PropertyType) ||
-				typeof(SyntaxToken).IsAssignableFrom(prop.PropertyType) ||
-				typeof(IEnumerable<SyntaxBase>).IsAssignableFrom(prop.PropertyType) ||
-				typeof(IEnumerable<SyntaxToken>).IsAssignableFrom(prop.PropertyType);
-		}
-
-		static string FirstToUpper(string str)
-		{
-			return str.Substring(0, 1).ToUpperInvariant() + str.Substring(1);
-		}
-
 		[Test]
-		public void All_public_properties_have_ChildOrder_syntax_matching_constructor_arguments()
+		public void Public_properties_with_NodeChild_attribute_matches_constructor_params()
 		{
 			var types =
 				typeof(SyntaxBase)
@@ -34,46 +21,39 @@ namespace Fuse.UxParser.Tests.Syntax
 					.ExportedTypes
 					.Where(type => typeof(SyntaxBase).IsAssignableFrom(type) && !type.IsAbstract);
 
+
+			// Check pattern consistency for all syntax types
 			Assert.Multiple(
 				() =>
 				{
 					foreach (var type in types)
 					{
-						var ctor = type.GetConstructors().OrderByDescending(x => x.GetParameters().Length).Single();
+						var props = GetNodeChildProperties(type);
 
-						var paramIndex = 0;
-						foreach (var param in ctor.GetParameters())
+						foreach (var prop in props)
 						{
-							var prop = type.GetProperty(FirstToUpper(param.Name));
-							if (prop == null)
-							{
-								Assert.Fail("No property matching {0} ctor param {1}", type.Name, param.Name);
-								continue;
-							}
-							var nodeChildAttribute = prop.GetCustomAttribute<NodeChildAttribute>();
-							if (nodeChildAttribute == null)
-							{
-								Assert.Fail("Property {0}.{1} missing attribute", type.Name, prop.Name);
-								continue;
-							}
-							Assert.That(
-								IsValidNodeChild(prop),
-								"Property {0}.{1} is marked with [NodeChild] but is neither a {2} nor a {3}",
-								type.Name,
-								prop.Name,
-								typeof(SyntaxBase),
-								typeof(SyntaxToken));
+							Assert.That(IsValidNodeChildProperty(prop), "[NodeChild] property is not of expected type");
+						}
 
+						foreach (var propGroup in props.GroupBy(x => x.GetCustomAttribute<NodeChildAttribute>().OrderIndex).Where(x => x.Count() > 1))
+						{
+							Assert.Fail($"Properties {string.Join(", ", propGroup.Select(x => x.Name))} of {type.Name} marked with [{nameof(NodeChildAttribute)}] have conflicting OrderIndex {propGroup.Key}");
+						}
+
+						var createMethod = GetSyntaxCreateMethod(type);
+
+						if (createMethod == null)
+						{
+							Assert.Fail("No public static Create method found for " + type.FullName);
+							continue;
+						}
+
+						foreach (var x in props.Zip(createMethod.GetParameters(), (prop, param) => new { prop, param }))
+						{
 							Assert.That(
-								nodeChildAttribute.OrderIndex,
-								Is.EqualTo(paramIndex),
-								"Index {0} defined in attribute on {1}.{2} don't match parameter {3} index {4}",
-								nodeChildAttribute.OrderIndex,
-								type.Name,
-								prop.Name,
-								param.Name,
-								paramIndex);
-							paramIndex++;
+								x.param.Name,
+								Is.EqualTo(FirstToLower(x.prop.Name)),
+								$"Parameter name {x.param.Name} of {type.Name}.Create does not match property name {x.prop.Name}");
 						}
 					}
 				});
@@ -119,8 +99,8 @@ namespace Fuse.UxParser.Tests.Syntax
 				Assert.That(type.Name.EndsWith(expectedSuffix), "{0} don't end with {1}", type.Name, expectedSuffix);
 				var nameWithoutSuffix = type.Name.Substring(0, type.Name.Length - expectedSuffix.Length);
 				sb.Append($"    protected virtual {baseType.Name} Visit{nameWithoutSuffix}({type.Name} {paramName})\r\n    {{\r\n");
-				var invoke = "            return new " + type.Name + "(";
-				var ctor = type.GetConstructors().OrderByDescending(x => x.GetParameters().Length).Single();
+				var invoke = $"            return {type.Name}.Create(";
+				var createMethod = GetSyntaxCreateMethod(type);
 
 				var isFirstParam = true;
 				var hasVisitedChild = false;
@@ -129,7 +109,7 @@ namespace Fuse.UxParser.Tests.Syntax
 				foreach (var prop in type.GetProperties().Where(x => x.GetCustomAttribute<NodeChildAttribute>() != null)
 					.OrderBy(x => x.GetCustomAttribute<NodeChildAttribute>().OrderIndex))
 				{
-					var argName = ctor.GetParameters()
+					var argName = createMethod.GetParameters()
 						.Single(x => string.Equals(prop.Name, x.Name, StringComparison.OrdinalIgnoreCase)).Name;
 
 					if (!isFirstParam)
@@ -174,6 +154,34 @@ namespace Fuse.UxParser.Tests.Syntax
 			sb.AppendLine("}");
 
 			Console.WriteLine(sb.ToString());
+		}
+
+		static MethodInfo GetSyntaxCreateMethod(Type type)
+		{
+			return type.GetMethod("Create", BindingFlags.Public | BindingFlags.Static, null, GetNodeChildProperties(type).Select(x => x.PropertyType).ToArray(), null);
+		}
+
+		static List<PropertyInfo> GetNodeChildProperties(Type type)
+		{
+			return type.GetProperties()
+				.Select(propInfo => new { info = propInfo, nodeChildAttr = propInfo.GetCustomAttribute<NodeChildAttribute>() })
+				.Where(x => x.nodeChildAttr != null)
+				.OrderBy(x => x.nodeChildAttr.OrderIndex)
+				.Select(x => x.info)
+				.ToList();
+		}
+
+		static bool IsValidNodeChildProperty(PropertyInfo prop)
+		{
+			return typeof(SyntaxBase).IsAssignableFrom(prop.PropertyType) ||
+				typeof(SyntaxToken).IsAssignableFrom(prop.PropertyType) ||
+				typeof(IEnumerable<SyntaxBase>).IsAssignableFrom(prop.PropertyType) ||
+				typeof(IEnumerable<SyntaxToken>).IsAssignableFrom(prop.PropertyType);
+		}
+
+		static string FirstToLower(string str)
+		{
+			return str.Substring(0, 1).ToLowerInvariant() + str.Substring(1);
 		}
 	}
 }

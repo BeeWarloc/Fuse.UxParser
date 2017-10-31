@@ -1,4 +1,5 @@
-﻿using System.Collections.Immutable;
+﻿using System;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 
@@ -6,18 +7,28 @@ namespace Fuse.UxParser.Syntax
 {
 	public class EmptyElementSyntax : ElementSyntaxBase
 	{
-		public EmptyElementSyntax(
+		EmptyElementSyntax(
 			LessThanToken lessThan,
 			NameToken name,
 			IImmutableList<AttributeSyntaxBase> attributes,
 			SlashToken slash,
 			GreaterThanToken greaterThan)
 		{
-			LessThan = lessThan;
-			Name = name;
-			Attributes = attributes;
-			Slash = slash;
-			GreaterThan = greaterThan;
+			LessThan = lessThan ?? throw new ArgumentNullException(nameof(lessThan));
+			Name = name ?? throw new ArgumentNullException(nameof(name));
+			Attributes = attributes ?? throw new ArgumentNullException(nameof(attributes));
+			Slash = slash ?? throw new ArgumentNullException(nameof(slash));
+			GreaterThan = greaterThan ?? throw new ArgumentNullException(nameof(greaterThan));
+		}
+
+		public static EmptyElementSyntax Create(
+			LessThanToken lessThan,
+			NameToken name,
+			IImmutableList<AttributeSyntaxBase> attributes,
+			SlashToken slash,
+			GreaterThanToken greaterThan)
+		{
+			return new EmptyElementSyntax(lessThan, name, attributes, slash, greaterThan);
 		}
 
 		[NodeChild(0)]
@@ -66,10 +77,10 @@ namespace Fuse.UxParser.Syntax
 				return new EmptyElementSyntax(LessThan, name, attributes, Slash, GreaterThan);
 			}
 
-			return new ElementSyntax(
+			return ElementSyntax.Create(
 				ElementStartTagSyntax.Create(LessThan, name, attributes, GreaterThanToken.Default),
 				nodes,
-				new ElementEndTagSyntax(
+				ElementEndTagSyntax.Create(
 					LessThanToken.Default,
 					SlashToken.Default,
 					name,

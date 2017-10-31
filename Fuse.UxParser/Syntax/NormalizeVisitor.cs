@@ -16,7 +16,7 @@ namespace Fuse.UxParser.Syntax
 		protected override SyntaxBase VisitEmptyElement(EmptyElementSyntax syntax)
 		{
 			var attributes = VisitAttributes(syntax.Attributes);
-			return new EmptyElementSyntax(
+			return EmptyElementSyntax.Create(
 				LessThanToken.Create(TriviaSyntax.Empty, TriviaSyntax.Empty),
 				syntax.Name.WithTrivia(TriviaSyntax.Empty, TriviaSyntax.Empty),
 				attributes,

@@ -5,7 +5,12 @@ namespace Fuse.UxParser.Syntax
 {
 	public class ImplicitAttributeSyntax : AttributeSyntaxBase
 	{
-		public ImplicitAttributeSyntax(NameToken name) : base(name) { }
+		ImplicitAttributeSyntax(NameToken name) : base(name) { }
+
+		public static ImplicitAttributeSyntax Create(NameToken name)
+		{
+			return new ImplicitAttributeSyntax(name);
+		}
 
 		public override TriviaSyntax LeadingTrivia => Name.LeadingTrivia;
 		public override TriviaSyntax TrailingTrivia => Name.TrailingTrivia;

@@ -1,4 +1,5 @@
-﻿using System.Collections.Immutable;
+﻿using System;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 
@@ -6,9 +7,14 @@ namespace Fuse.UxParser.Syntax
 {
 	public class DocumentSyntax : SyntaxBase
 	{
-		public DocumentSyntax(IImmutableList<NodeSyntax> nodes)
+		DocumentSyntax(IImmutableList<NodeSyntax> nodes)
 		{
-			Nodes = nodes;
+			Nodes = nodes ?? throw new ArgumentNullException(nameof(nodes));
+		}
+
+		public static DocumentSyntax Create(IImmutableList<NodeSyntax> nodes)
+		{
+			return new DocumentSyntax(nodes);
 		}
 
 		[NodeChild(0)]

@@ -7,11 +7,19 @@ namespace Fuse.UxParser.Syntax
 	// Not very happy how this turned out... Should def change this
 	public class InlineScriptElementSyntax : ElementSyntaxBase
 	{
-		public InlineScriptElementSyntax(ElementStartTagSyntax startTag, ScriptToken script, ElementEndTagSyntax endTag)
+		InlineScriptElementSyntax(ElementStartTagSyntax startTag, ScriptToken script, ElementEndTagSyntax endTag)
 		{
-			StartTag = startTag;
-			Script = script;
-			EndTag = endTag;
+			StartTag = startTag ?? throw new ArgumentNullException(nameof(startTag));
+			Script = script ?? throw new ArgumentNullException(nameof(script));
+			EndTag = endTag ?? throw new ArgumentNullException(nameof(endTag));
+		}
+
+		public static InlineScriptElementSyntax Create(
+			ElementStartTagSyntax startTag,
+			ScriptToken script,
+			ElementEndTagSyntax endTag)
+		{
+			return new InlineScriptElementSyntax(startTag, script, endTag);
 		}
 
 		[NodeChild(0)]

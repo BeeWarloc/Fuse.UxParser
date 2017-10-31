@@ -1,15 +1,25 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 
 namespace Fuse.UxParser.Syntax
 {
 	public class ElementEndTagSyntax : SyntaxBase
 	{
-		public ElementEndTagSyntax(LessThanToken lessThan, SlashToken slash, NameToken name, GreaterThanToken greaterThan)
+		ElementEndTagSyntax(LessThanToken lessThan, SlashToken slash, NameToken name, GreaterThanToken greaterThan)
 		{
-			LessThan = lessThan;
-			Slash = slash;
-			Name = name;
-			GreaterThan = greaterThan;
+			LessThan = lessThan ?? throw new ArgumentNullException(nameof(lessThan));
+			Slash = slash ?? throw new ArgumentNullException(nameof(slash));
+			Name = name ?? throw new ArgumentNullException(nameof(name));
+			GreaterThan = greaterThan ?? throw new ArgumentNullException(nameof(greaterThan));
+		}
+
+		public static ElementEndTagSyntax Create(
+			LessThanToken lessThan,
+			SlashToken slash,
+			NameToken name,
+			GreaterThanToken greaterThan)
+		{
+			return new ElementEndTagSyntax(lessThan, slash, name, greaterThan);
 		}
 
 		[NodeChild(0)]

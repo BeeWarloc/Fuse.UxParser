@@ -1,10 +1,12 @@
-﻿namespace Fuse.UxParser.Syntax
+﻿using System;
+
+namespace Fuse.UxParser.Syntax
 {
 	public abstract class AttributeSyntaxBase : SyntaxBase
 	{
 		protected AttributeSyntaxBase(NameToken name)
 		{
-			Name = name;
+			Name = name ?? throw new ArgumentNullException(nameof(name));
 		}
 
 		[NodeChild(0)]

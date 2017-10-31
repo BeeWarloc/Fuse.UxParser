@@ -1,4 +1,5 @@
-﻿using System.Collections.Immutable;
+﻿using System;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 
@@ -9,12 +10,18 @@ namespace Fuse.UxParser.Syntax
 		// Cache FullSpan of elements to avoid very deep shit.
 		int _fullSpan = -1;
 
-		public ElementSyntax(ElementStartTagSyntax startTag, IImmutableList<NodeSyntax> nodes, ElementEndTagSyntax endTag)
+		ElementSyntax(ElementStartTagSyntax startTag, IImmutableList<NodeSyntax> nodes, ElementEndTagSyntax endTag)
 		{
-			StartTag = startTag;
-			Nodes = nodes;
-			EndTag = endTag;
+			StartTag = startTag ?? throw new ArgumentNullException(nameof(startTag));
+			Nodes = nodes ?? throw new ArgumentNullException(nameof(nodes));
+			EndTag = endTag ?? throw new ArgumentNullException(nameof(endTag));
+
 			DescendantElementCount = nodes.OfType<ElementSyntaxBase>().Sum(x => x.DescendantElementCount + 1);
+		}
+
+		public static ElementSyntax Create(ElementStartTagSyntax startTag, IImmutableList<NodeSyntax> nodes, ElementEndTagSyntax endTag)
+		{
+			return new ElementSyntax(startTag, nodes, endTag);
 		}
 
 		[NodeChild(0)]
@@ -57,7 +64,7 @@ namespace Fuse.UxParser.Syntax
 			attributes = attributes ?? Attributes;
 
 			if ((isEmpty ?? false) && nodes.Count == 0)
-				return new EmptyElementSyntax(
+				return EmptyElementSyntax.Create(
 					StartTag.LessThan,
 					Name,
 					attributes,
@@ -69,7 +76,7 @@ namespace Fuse.UxParser.Syntax
 				(nodes.Equals(Nodes) || nodes.SequenceEqual(Nodes)))
 				return this;
 
-			return new ElementSyntax(
+			return Create(
 				StartTag.With(name, attributes),
 				nodes,
 				EndTag.With(EndTag.Name.With(name.Text)));

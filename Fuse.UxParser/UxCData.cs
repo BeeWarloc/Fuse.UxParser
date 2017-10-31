@@ -25,7 +25,7 @@ namespace Fuse.UxParser
 					throw new ArgumentException("Value must not contain CData end marker");
 
 				if (Value != value)
-					ReplaceSyntax(new CDataSyntax(Syntax.Start, new EncodedTextToken(value), Syntax.End));
+					ReplaceSyntax(CDataSyntax.Create(Syntax.Start, new EncodedTextToken(value), Syntax.End));
 			}
 		}
 

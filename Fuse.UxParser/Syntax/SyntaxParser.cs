@@ -73,7 +73,7 @@ namespace Fuse.UxParser.Syntax
 			if (!_scanner.ScanUntilMatch("-->", out var encodedText) ||
 				!TryParseCommentEndToken(out end))
 				_scanner.ThrowError();
-			node = Dedup(new CommentSyntax(start, new EncodedTextToken(encodedText), end));
+			node = Dedup(CommentSyntax.Create(start, new EncodedTextToken(encodedText), end));
 			return true;
 		}
 
@@ -129,7 +129,7 @@ namespace Fuse.UxParser.Syntax
 					TryParseGreaterThanToken(out var greaterThan))
 				{
 					scope.Commit();
-					endTag = Dedup(new ElementEndTagSyntax(lessThan, slashToken, name, greaterThan));
+					endTag = Dedup(ElementEndTagSyntax.Create(lessThan, slashToken, name, greaterThan));
 					return true;
 				}
 
@@ -153,7 +153,7 @@ namespace Fuse.UxParser.Syntax
 		{
 			if (_scanner.ScanOneOrMore(c => c != '<', out var text))
 			{
-				childBase = new TextSyntax(new EncodedTextToken(text));
+				childBase = TextSyntax.Create(new EncodedTextToken(text));
 				return true;
 			}
 			childBase = null;
@@ -203,7 +203,7 @@ namespace Fuse.UxParser.Syntax
 			while (TryParseNode(out var childBase))
 				childNodes.Add(childBase);
 
-			document = new DocumentSyntax(childNodes.ToImmutable());
+			document = DocumentSyntax.Create(childNodes.ToImmutable());
 			return true;
 		}
 
@@ -232,7 +232,7 @@ namespace Fuse.UxParser.Syntax
 
 				if (isEmpty)
 				{
-					node = new EmptyElementSyntax(lessThan, name, attributes, slashToken, greaterThan);
+					node = EmptyElementSyntax.Create(lessThan, name, attributes, slashToken, greaterThan);
 					return true;
 				}
 
@@ -249,7 +249,7 @@ namespace Fuse.UxParser.Syntax
 					if (!TryParseEndTag(out var scriptEndTag) || scriptEndTag.Name.Text != startTag.Name.Text)
 						_scanner.ThrowError();
 
-					node = new InlineScriptElementSyntax(startTag, new ScriptToken(content), scriptEndTag);
+					node = InlineScriptElementSyntax.Create(startTag, new ScriptToken(content), scriptEndTag);
 					return true;
 				}
 
@@ -260,7 +260,7 @@ namespace Fuse.UxParser.Syntax
 				using (var endTagScope = _scanner.Scope())
 				{
 					if (!TryParseEndTag(out endTag) || endTag.Name.Text != startTag.Name.Text)
-						endTag = new ElementEndTagSyntax(
+						endTag = ElementEndTagSyntax.Create(
 							LessThanToken.Missing,
 							SlashToken.Missing,
 							NameToken.Missing,
@@ -268,7 +268,7 @@ namespace Fuse.UxParser.Syntax
 					else
 						endTagScope.Commit();
 				}
-				node = Dedup(new ElementSyntax(startTag, childNodes.ToImmutable(), endTag));
+				node = Dedup(ElementSyntax.Create(startTag, childNodes.ToImmutable(), endTag));
 				return true;
 			}
 		}
@@ -293,7 +293,7 @@ namespace Fuse.UxParser.Syntax
 			if (!_scanner.ScanUntilMatch("]]>", out var encodedText) ||
 				!TryParseCDataEndToken(out end))
 				_scanner.ThrowError();
-			node = new CDataSyntax(start, new EncodedTextToken(encodedText), end);
+			node = CDataSyntax.Create(start, new EncodedTextToken(encodedText), end);
 			return true;
 		}
 
@@ -390,7 +390,7 @@ namespace Fuse.UxParser.Syntax
 				scope.Commit();
 				if (!TryParseEqualsToken(out var eqToken))
 				{
-					attribute = new ImplicitAttributeSyntax(name);
+					attribute = ImplicitAttributeSyntax.Create(name);
 					return true;
 				}
 

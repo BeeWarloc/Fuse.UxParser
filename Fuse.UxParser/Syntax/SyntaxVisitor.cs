@@ -41,7 +41,7 @@ namespace Fuse.UxParser.Syntax
 				SyntaxEquals(syntax.Value, value) &&
 				SyntaxEquals(syntax.End, end))
 				return syntax;
-			return new CDataSyntax(start, value, end);
+			return CDataSyntax.Create(start, value, end);
 		}
 
 		protected virtual SyntaxToken VisitCommentEnd(CommentEndToken token)
@@ -63,7 +63,7 @@ namespace Fuse.UxParser.Syntax
 				SyntaxEquals(syntax.Value, value) &&
 				SyntaxEquals(syntax.End, end))
 				return syntax;
-			return new CommentSyntax(start, value, end);
+			return CommentSyntax.Create(start, value, end);
 		}
 
 		protected virtual SyntaxBase VisitDocument(DocumentSyntax syntax)
@@ -71,7 +71,7 @@ namespace Fuse.UxParser.Syntax
 			var nodes = VisitAndConvert(syntax.Nodes);
 			if (ReferenceEquals(syntax.Nodes, nodes))
 				return syntax;
-			return new DocumentSyntax(nodes);
+			return DocumentSyntax.Create(nodes);
 		}
 
 		protected virtual SyntaxBase VisitElementEndTag(ElementEndTagSyntax syntax)
@@ -85,7 +85,7 @@ namespace Fuse.UxParser.Syntax
 				SyntaxEquals(syntax.Name, name) &&
 				SyntaxEquals(syntax.GreaterThan, greaterThan))
 				return syntax;
-			return new ElementEndTagSyntax(lessThan, slash, name, greaterThan);
+			return ElementEndTagSyntax.Create(lessThan, slash, name, greaterThan);
 		}
 
 		protected virtual SyntaxBase VisitElementStartTag(ElementStartTagSyntax syntax)
@@ -111,7 +111,7 @@ namespace Fuse.UxParser.Syntax
 				ReferenceEquals(syntax.Nodes, nodes) &&
 				SyntaxEquals(syntax.EndTag, endTag))
 				return syntax;
-			return new ElementSyntax(startTag, nodes, endTag);
+			return ElementSyntax.Create(startTag, nodes, endTag);
 		}
 
 		protected virtual SyntaxBase VisitEmptyElement(EmptyElementSyntax syntax)
@@ -127,7 +127,7 @@ namespace Fuse.UxParser.Syntax
 				SyntaxEquals(syntax.Slash, slash) &&
 				SyntaxEquals(syntax.GreaterThan, greaterThan))
 				return syntax;
-			return new EmptyElementSyntax(lessThan, name, attributes, slash, greaterThan);
+			return EmptyElementSyntax.Create(lessThan, name, attributes, slash, greaterThan);
 		}
 
 		protected virtual SyntaxToken VisitEncodedText(EncodedTextToken token)
@@ -150,7 +150,7 @@ namespace Fuse.UxParser.Syntax
 			var name = VisitAndConvert(syntax.Name);
 			if (SyntaxEquals(syntax.Name, name))
 				return syntax;
-			return new ImplicitAttributeSyntax(name);
+			return ImplicitAttributeSyntax.Create(name);
 		}
 
 		protected virtual SyntaxBase VisitInlineScriptElement(InlineScriptElementSyntax syntax)
@@ -162,7 +162,7 @@ namespace Fuse.UxParser.Syntax
 				SyntaxEquals(syntax.Script, script) &&
 				SyntaxEquals(syntax.EndTag, endTag))
 				return syntax;
-			return new InlineScriptElementSyntax(startTag, script, endTag);
+			return InlineScriptElementSyntax.Create(startTag, script, endTag);
 		}
 
 		protected virtual SyntaxToken VisitLessThan(LessThanToken token)
@@ -190,7 +190,7 @@ namespace Fuse.UxParser.Syntax
 			var value = VisitAndConvert(syntax.Value);
 			if (SyntaxEquals(syntax.Value, value))
 				return syntax;
-			return new TextSyntax(value);
+			return TextSyntax.Create(value);
 		}
 
 		protected virtual bool SyntaxEquals(ISyntax a, ISyntax b)

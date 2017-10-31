@@ -1,14 +1,20 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 
 namespace Fuse.UxParser.Syntax
 {
 	public class CDataSyntax : NodeSyntax
 	{
-		public CDataSyntax(CDataStartToken start, EncodedTextToken value, CDataEndToken end)
+		CDataSyntax(CDataStartToken start, EncodedTextToken value, CDataEndToken end)
 		{
-			Start = start;
-			Value = value;
-			End = end;
+			Start = start ?? throw new ArgumentNullException(nameof(start));
+			Value = value ?? throw new ArgumentNullException(nameof(value));
+			End = end ?? throw new ArgumentNullException(nameof(end));
+		}
+
+		public static CDataSyntax Create(CDataStartToken start, EncodedTextToken value, CDataEndToken end)
+		{
+			return new CDataSyntax(start, value, end);
 		}
 
 		[NodeChild(0)]

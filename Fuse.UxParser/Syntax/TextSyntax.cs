@@ -1,12 +1,18 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 
 namespace Fuse.UxParser.Syntax
 {
 	public class TextSyntax : NodeSyntax
 	{
-		public TextSyntax(EncodedTextToken value)
+		TextSyntax(EncodedTextToken value)
 		{
-			Value = value;
+			Value = value ?? throw new ArgumentNullException(nameof(value));
+		}
+
+		public static TextSyntax Create(EncodedTextToken value)
+		{
+			return new TextSyntax(value);
 		}
 
 		[NodeChild(0)]

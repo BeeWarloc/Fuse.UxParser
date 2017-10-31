@@ -29,7 +29,7 @@ namespace Fuse.UxParser
 				if (Value != value)
 				{
 					var encodedText = UxTextEncoding.EncodeText(value);
-					ReplaceSyntax(new TextSyntax(new EncodedTextToken(encodedText)), value);
+					ReplaceSyntax(TextSyntax.Create(new EncodedTextToken(encodedText)), value);
 				}
 			}
 		}

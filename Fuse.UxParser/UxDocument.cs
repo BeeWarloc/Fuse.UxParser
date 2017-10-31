@@ -28,7 +28,7 @@ namespace Fuse.UxParser
 			{
 				if (_isDirty)
 				{
-					_syntax = new DocumentSyntax(Nodes.Select(x => x.Syntax).ToImmutableList());
+					_syntax = DocumentSyntax.Create(Nodes.Select(x => x.Syntax).ToImmutableList());
 					_isDirty = false;
 				}
 				return _syntax;
