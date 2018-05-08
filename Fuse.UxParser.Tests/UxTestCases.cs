@@ -39,6 +39,7 @@ namespace Fuse.UxParser.Tests
 
 		static IEnumerable<TestCaseData> GetTestCaseDataForAllUxDocsRecursively(string directory)
 		{
+            Console.WriteLine("Getting test ux files from " + directory);
 			directory = Path.GetFullPath(directory);
 			if (!Directory.Exists(directory))
 				throw new DirectoryNotFoundException($"Unable to locate ux example dir {directory}");

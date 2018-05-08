@@ -3,13 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27004.2002
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Fuse.UxParser", "Fuse.UxParser\Fuse.UxParser.csproj", "{F36E9893-63E5-47AD-A1BD-0C95E99713F5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fuse.UxParser", "Fuse.UxParser\Fuse.UxParser.csproj", "{F36E9893-63E5-47AD-A1BD-0C95E99713F5}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fuse.UxParser.Tests", "Fuse.UxParser.Tests\Fuse.UxParser.Tests.csproj", "{362F7416-A720-4C25-A358-94E96310687D}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sandbox", "sandbox", "{4566B4D7-0A21-493C-ADA8-61530135523A}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "XmlExperimentation", "sandbox\XmlExperimentation\XmlExperimentation.csproj", "{2A872930-F7EE-44E9-901B-3869681AD768}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XmlExperimentation", "sandbox\XmlExperimentation\XmlExperimentation.csproj", "{2A872930-F7EE-44E9-901B-3869681AD768}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XmlExperimentation.Tests", "sandbox\XmlExperimentation.Tests\XmlExperimentation.Tests.csproj", "{BBD19A45-D1AF-49EB-8A15-7380BF3413B5}"
 EndProject
@@ -50,5 +50,13 @@ Global
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {396BCD79-79EA-48A4-A9A6-A3EC016497AD}
+	EndGlobalSection
+	GlobalSection(MonoDevelopProperties) = preSolution
+		Policies = $0
+		$0.TextStylePolicy = $1
+		$1.FileWidth = 80
+		$1.scope = text/x-csharp
+		$0.CSharpFormattingPolicy = $2
+		$2.scope = text/x-csharp
 	EndGlobalSection
 EndGlobal
